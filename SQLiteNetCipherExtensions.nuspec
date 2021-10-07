@@ -20,8 +20,8 @@
   </metadata>
 
   <files>
-    <file src="SQLiteNetExtensions/bin/Release/netstandard1.1/SQLiteNetCipherExtensions.dll" target="lib/netstandard1.1" />
-    <file src="SQLiteNetExtensions/bin/Release/netstandard1.1/SQLiteNetCipherExtensions.pdb" target="lib/netstandard1.1" />
+    <file src="SQLiteNetExtensions/bin/Release/netstandard2.0/SQLiteNetCipherExtensions.dll" target="lib/netstandard2.0" />
+    <file src="SQLiteNetExtensions/bin/Release/netstandard2.0/SQLiteNetCipherExtensions.pdb" target="lib/netstandard2.0" />
     <file src="SQLiteNetExtensions/**/*.cs" target="src" />
   </files>
 </package>
