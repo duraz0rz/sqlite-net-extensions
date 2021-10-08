@@ -23,14 +23,7 @@ namespace SQLiteNetExtensionsAsync.Extensions
         /// <param name="element">Object to be updated. Must already have been inserted in the database</param>
         public static Task UpdateWithChildrenAsync(this SQLiteAsyncConnection conn, object element)
         {
-			return Task.Run(() =>
-			 {
-				 var connectionWithLock = conn.GetConnection();
-				 using (connectionWithLock.Lock())
-				 {
-					 connectionWithLock.UpdateWithChildren(element);
-				 }
-			 });
+	        return conn.RunInTransactionAsync(transConn => transConn.UpdateWithChildren(element));
 		}
 
         /// <summary>
@@ -47,14 +40,7 @@ namespace SQLiteNetExtensionsAsync.Extensions
         /// <param name="recursive">If set to <c>true</c> all the insert-cascade properties will be inserted</param>
         public static Task InsertWithChildrenAsync(this SQLiteAsyncConnection conn, object element, bool recursive = false)
         {
-			return Task.Run(() =>
-			 {
-				 var connectionWithLock = conn.GetConnection();
-				 using (connectionWithLock.Lock())
-				 {
-					 connectionWithLock.InsertWithChildren(element, recursive);
-				 }
-			 });
+	        return conn.RunInTransactionAsync(transConn => transConn.InsertWithChildren(element, recursive));
 		}
 
         /// <summary>
@@ -71,14 +57,7 @@ namespace SQLiteNetExtensionsAsync.Extensions
         /// <param name="recursive">If set to <c>true</c> all the insert-cascade properties will be inserted</param>
         public static Task InsertOrReplaceWithChildrenAsync(this SQLiteAsyncConnection conn, object element, bool recursive = false)
         {
-			return Task.Run(() =>
-			 {
-				 var connectionWithLock = conn.GetConnection();
-				 using (connectionWithLock.Lock())
-				 {
-					 connectionWithLock.InsertOrReplaceWithChildren(element, recursive);
-				 }
-			 });
+			return conn.RunInTransactionAsync(transConn => transConn.InsertOrReplaceWithChildren(element, recursive));
 		}
 
         /// <summary>
@@ -95,14 +74,7 @@ namespace SQLiteNetExtensionsAsync.Extensions
         /// <param name="recursive">If set to <c>true</c> all the insert-cascade properties will be inserted</param>
         public static Task InsertAllWithChildrenAsync(this SQLiteAsyncConnection conn, IEnumerable elements, bool recursive = false)
         {
-			return Task.Run(() =>
-			 {
-				 var connectionWithLock = conn.GetConnection();
-				 using (connectionWithLock.Lock())
-				 {
-					 connectionWithLock.InsertAllWithChildren(elements, recursive);
-				 }
-			 });
+			return conn.RunInTransactionAsync(transConn => transConn.InsertAllWithChildren(elements, recursive));
 		}
 
         /// <summary>
@@ -119,14 +91,8 @@ namespace SQLiteNetExtensionsAsync.Extensions
         /// <param name="recursive">If set to <c>true</c> all the insert-cascade properties will be inserted</param>
         public static Task InsertOrReplaceAllWithChildrenAsync(this SQLiteAsyncConnection conn, IEnumerable elements, bool recursive = false)
         {
-			return Task.Run(() =>
-			 {
-				 var connectionWithLock = conn.GetConnection();
-				 using (connectionWithLock.Lock())
-				 {
-					 connectionWithLock.InsertOrReplaceAllWithChildren(elements, recursive);
-				 }
-			 });
+	        return conn.RunInTransactionAsync(
+		        transConn => transConn.InsertOrReplaceAllWithChildren(elements, recursive));
 		}
 
         /// <summary>
@@ -141,14 +107,7 @@ namespace SQLiteNetExtensionsAsync.Extensions
         /// <param name="objects">Objects to be deleted from the database</param>
         public static Task DeleteAllAsync(this SQLiteAsyncConnection conn, IEnumerable objects, bool recursive = false)
         {
-			return Task.Run(() =>
-			 {
-				 var connectionWithLock = conn.GetConnection();
-				 using (connectionWithLock.Lock())
-				 {
-					 connectionWithLock.DeleteAll(objects, recursive);
-				 }
-			 });
+	        return conn.RunInTransactionAsync(transConn => transConn.DeleteAll(objects, recursive));
 		}
 
         /// <summary>
@@ -163,14 +122,7 @@ namespace SQLiteNetExtensionsAsync.Extensions
         /// <param name="element">Object to be deleted from the database</param>
         public static Task DeleteAsync(this SQLiteAsyncConnection conn, object element, bool recursive)
         {
-			return Task.Run(() =>
-			 {
-				 var connectionWithLock = conn.GetConnection();
-				 using (connectionWithLock.Lock())
-				 {
-					 connectionWithLock.Delete(element, recursive);
-				 }
-			 });
+	        return conn.RunInTransactionAsync(transConn => transConn.Delete(element, recursive));
 		}
 
         /// <summary>
@@ -182,14 +134,7 @@ namespace SQLiteNetExtensionsAsync.Extensions
         /// <typeparam name="T">The Entity type, it should match de database entity type</typeparam>
         public static Task DeleteAllIdsAsync<T>(this SQLiteAsyncConnection conn, IEnumerable<object> primaryKeyValues)
         {
-			return Task.Run(() =>
-			 {
-				 var connectionWithLock = conn.GetConnection();
-				 using (connectionWithLock.Lock())
-				 {
-					 connectionWithLock.DeleteAllIds<T>(primaryKeyValues);
-				 }
-			 });
+	        return conn.RunInTransactionAsync(transConn => transConn.DeleteAllIds<T>(primaryKeyValues));
 		}
     }
 }

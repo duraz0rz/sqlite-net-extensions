@@ -35,12 +35,16 @@ namespace SQLiteNetExtensions.Extensions
         /// <param name="element">Object to be updated. Must already have been inserted in the database</param>
         public static void UpdateWithChildren(this SQLiteConnection conn, object element)
         {
+            var savePoint = conn.SaveTransactionPoint();
+
             // Update the current element
             RefreshForeignKeys(element);
             conn.Update(element);
 
             // Update inverse foreign keys
             conn.UpdateInverseForeignKeys(element);
+
+            conn.Release(savePoint);
         }
 
         /// <summary>
@@ -55,8 +59,13 @@ namespace SQLiteNetExtensions.Extensions
         /// <param name="conn">SQLite Net connection object</param>
         /// <param name="element">Object to be inserted.</param>
         /// <param name="recursive">If set to <c>true</c> all the insert-cascade properties will be inserted</param>
-        public static void InsertWithChildren(this SQLiteConnection conn, object element, bool recursive = false) {
+        public static void InsertWithChildren(this SQLiteConnection conn, object element, bool recursive = false)
+        {
+            var savePoint = conn.SaveTransactionPoint();
+
             conn.InsertWithChildrenRecursive(element, false, recursive);
+
+            conn.Release(savePoint);
         }
 
         /// <summary>
@@ -71,8 +80,13 @@ namespace SQLiteNetExtensions.Extensions
         /// <param name="conn">SQLite Net connection object</param>
         /// <param name="element">Object to be inserted.</param>
         /// <param name="recursive">If set to <c>true</c> all the insert-cascade properties will be inserted</param>
-        public static void InsertOrReplaceWithChildren(this SQLiteConnection conn, object element, bool recursive = false) {
+        public static void InsertOrReplaceWithChildren(this SQLiteConnection conn, object element, bool recursive = false)
+        {
+            var savePoint = conn.SaveTransactionPoint();
+
             conn.InsertWithChildrenRecursive(element, true, recursive);
+
+            conn.Release(savePoint);
         }
 
         /// <summary>
@@ -87,8 +101,13 @@ namespace SQLiteNetExtensions.Extensions
         /// <param name="conn">SQLite Net connection object</param>
         /// <param name="elements">Objects to be inserted.</param>
         /// <param name="recursive">If set to <c>true</c> all the insert-cascade properties will be inserted</param>
-        public static void InsertAllWithChildren(this SQLiteConnection conn, IEnumerable elements, bool recursive = false) {
+        public static void InsertAllWithChildren(this SQLiteConnection conn, IEnumerable elements, bool recursive = false)
+        {
+            var savePoint = conn.SaveTransactionPoint();
+
             conn.InsertAllWithChildrenRecursive(elements, false, recursive);
+
+            conn.Release(savePoint);
         }
 
         /// <summary>
@@ -103,8 +122,13 @@ namespace SQLiteNetExtensions.Extensions
         /// <param name="conn">SQLite Net connection object</param>
         /// <param name="elements">Objects to be inserted.</param>
         /// <param name="recursive">If set to <c>true</c> all the insert-cascade properties will be inserted</param>
-        public static void InsertOrReplaceAllWithChildren(this SQLiteConnection conn, IEnumerable elements, bool recursive = false) {
+        public static void InsertOrReplaceAllWithChildren(this SQLiteConnection conn, IEnumerable elements, bool recursive = false)
+        {
+            var savePoint = conn.SaveTransactionPoint();
+
             conn.InsertAllWithChildrenRecursive(elements, true, recursive);
+
+            conn.Release(savePoint);
         }
 
         /// <summary>
@@ -117,8 +141,13 @@ namespace SQLiteNetExtensions.Extensions
         /// <param name="recursive">If set to <c>true</c> all relationships marked with 'CascadeDelete' will be
         /// deleted from the database recursively</param>
         /// <param name="objects">Objects to be deleted from the database</param>
-        public static void DeleteAll(this SQLiteConnection conn, IEnumerable objects, bool recursive = false) {
+        public static void DeleteAll(this SQLiteConnection conn, IEnumerable objects, bool recursive = false)
+        {
+            var savePoint = conn.SaveTransactionPoint();
+
             conn.DeleteAllRecursive(objects, recursive);
+
+            conn.Release(savePoint);
         }
 
         /// <summary>
@@ -131,11 +160,16 @@ namespace SQLiteNetExtensions.Extensions
         /// <param name="recursive">If set to <c>true</c> all relationships marked with 'CascadeDelete' will be
         /// deleted from the database recursively</param>
         /// <param name="element">Object to be deleted from the database</param>
-        public static void Delete(this SQLiteConnection conn, object element, bool recursive) {
+        public static void Delete(this SQLiteConnection conn, object element, bool recursive)
+        {
+            var savePoint = conn.SaveTransactionPoint();
+
             if (recursive)
                 conn.DeleteAll(new []{ element }, recursive);
             else
                 conn.Delete(element);
+
+            conn.Release(savePoint);
         }
 
         /// <summary>
@@ -145,11 +179,16 @@ namespace SQLiteNetExtensions.Extensions
         /// <param name="conn">SQLite Net connection object</param>
         /// <param name="primaryKeyValues">Primary keys of the objects to be deleted from the database</param>
         /// <typeparam name="T">The Entity type, it should match de database entity type</typeparam>
-        public static void DeleteAllIds<T>(this SQLiteConnection conn, IEnumerable<object> primaryKeyValues) {
+        public static void DeleteAllIds<T>(this SQLiteConnection conn, IEnumerable<object> primaryKeyValues)
+        {
+            var savePoint = conn.SaveTransactionPoint();
+
             var type = typeof(T);
             var primaryKeyProperty = type.GetPrimaryKey();
 
             conn.DeleteAllIds(primaryKeyValues.ToArray(), type.GetTableName(), primaryKeyProperty.GetColumnName());
+
+            conn.Release(savePoint);
         }
 
 
@@ -598,7 +637,7 @@ namespace SQLiteNetExtensions.Extensions
                 parameters.AddRange(chunk);
                 conn.Execute(deleteQuery, parameters.ToArray());
             }
-            
+
         }
 
         private static void DeleteAllIds(this SQLiteConnection conn, object[] primaryKeyValues, string entityName, string primaryKeyName) {
