@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using Moq;
 using NUnit.Framework;
 using SQLiteNetExtensions.Attributes;
