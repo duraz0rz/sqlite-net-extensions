@@ -160,8 +160,6 @@ Global
 		{3CED4953-37A6-4B28-A1D3-72762F55E78A}.Ad-Hoc|ARM.ActiveCfg = Ad-Hoc|iPhone
 		{3CED4953-37A6-4B28-A1D3-72762F55E78A}.Ad-Hoc|iPhone.ActiveCfg = Ad-Hoc|iPhone
 		{3CED4953-37A6-4B28-A1D3-72762F55E78A}.Ad-Hoc|iPhone.Build.0 = Ad-Hoc|iPhone
-		{3CED4953-37A6-4B28-A1D3-72762F55E78A}.Ad-Hoc|iPhoneSimulator.ActiveCfg = Ad-Hoc|iPhoneSimulator
-		{3CED4953-37A6-4B28-A1D3-72762F55E78A}.Ad-Hoc|iPhoneSimulator.Build.0 = Ad-Hoc|iPhoneSimulator
 		{3CED4953-37A6-4B28-A1D3-72762F55E78A}.Ad-Hoc|Mixed Platforms.ActiveCfg = Ad-Hoc|iPhone
 		{3CED4953-37A6-4B28-A1D3-72762F55E78A}.Ad-Hoc|Mixed Platforms.Build.0 = Ad-Hoc|iPhone
 		{3CED4953-37A6-4B28-A1D3-72762F55E78A}.Ad-Hoc|x64.ActiveCfg = Ad-Hoc|iPhone
@@ -170,8 +168,6 @@ Global
 		{3CED4953-37A6-4B28-A1D3-72762F55E78A}.AppStore|ARM.ActiveCfg = AppStore|iPhone
 		{3CED4953-37A6-4B28-A1D3-72762F55E78A}.AppStore|iPhone.ActiveCfg = AppStore|iPhone
 		{3CED4953-37A6-4B28-A1D3-72762F55E78A}.AppStore|iPhone.Build.0 = AppStore|iPhone
-		{3CED4953-37A6-4B28-A1D3-72762F55E78A}.AppStore|iPhoneSimulator.ActiveCfg = AppStore|iPhoneSimulator
-		{3CED4953-37A6-4B28-A1D3-72762F55E78A}.AppStore|iPhoneSimulator.Build.0 = AppStore|iPhoneSimulator
 		{3CED4953-37A6-4B28-A1D3-72762F55E78A}.AppStore|Mixed Platforms.ActiveCfg = AppStore|iPhone
 		{3CED4953-37A6-4B28-A1D3-72762F55E78A}.AppStore|Mixed Platforms.Build.0 = AppStore|iPhone
 		{3CED4953-37A6-4B28-A1D3-72762F55E78A}.AppStore|x64.ActiveCfg = AppStore|iPhone
