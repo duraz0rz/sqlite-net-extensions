@@ -516,8 +516,8 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
                 Assert.AreEqual(objectE.Id, objectF.ClassEKey, "Foreign keys haven't been updated yet");
 
                 // Check database values
-                var newObjectF = conn.Get<O2MClassB>(objectF.Id);
-                Assert.AreEqual(objectE.Id, newObjectF.ClassAKey, "Database stored value is not correct");
+                var newObjectF = conn.Get<O2MClassF>(objectF.Id);
+                Assert.AreEqual(objectE.Id, newObjectF.ClassEKey, "Database stored value is not correct");
             }
 
         }

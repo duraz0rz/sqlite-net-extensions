@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using NUnit.Framework;
 using SQLiteNetExtensions.Attributes;
 using SQLiteNetExtensionsAsync.Extensions;
@@ -42,7 +43,7 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
         }
 
         [Test]
-        public async void TestOneToOneRecursiveInsertAsync() {
+        public async Task TestOneToOneRecursiveInsertAsync() {
             var conn = Utils.CreateAsyncConnection();
             await conn.DropTableAsync<Passport>();
             await conn.DropTableAsync<Person>();
@@ -73,7 +74,7 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
         }
 
         [Test]
-        public async void TestOneToOneRecursiveInsertOrReplaceAsync() {
+        public async Task TestOneToOneRecursiveInsertOrReplaceAsync() {
             var conn = Utils.CreateAsyncConnection();
             await conn.DropTableAsync<Passport>();
             await conn.DropTableAsync<Person>();
@@ -156,7 +157,7 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
         }
 
         [Test]
-        public async void TestOneToOneRecursiveInsertGuidAsync() {
+        public async Task TestOneToOneRecursiveInsertGuidAsync() {
             var conn = Utils.CreateAsyncConnection();
             await conn.DropTableAsync<PassportGuid>();
             await conn.DropTableAsync<PersonGuid>();
@@ -189,7 +190,7 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
         }
 
         [Test]
-        public async void TestOneToOneRecursiveInsertOrReplaceGuidAsync() {
+        public async Task TestOneToOneRecursiveInsertOrReplaceGuidAsync() {
             var conn = Utils.CreateAsyncConnection();
             await conn.DropTableAsync<PassportGuid>();
             await conn.DropTableAsync<PersonGuid>();
@@ -275,7 +276,7 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
         }
 
         [Test]
-        public async void TestOneToManyRecursiveInsertAsync() {
+        public async Task TestOneToManyRecursiveInsertAsync() {
             var conn = Utils.CreateAsyncConnection();
             await conn.DropTableAsync<Customer>();
             await conn.DropTableAsync<Order>();
@@ -283,7 +284,7 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
             await conn.CreateTableAsync<Order>();
 
             var customer = new Customer
-            { 
+            {
                 Name = "John Smith",
                 Orders = new []
                 {
@@ -319,7 +320,7 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
         }
 
         [Test]
-        public async void TestOneToManyRecursiveInsertOrReplaceAsync() {
+        public async Task TestOneToManyRecursiveInsertOrReplaceAsync() {
             var conn = Utils.CreateAsyncConnection();
             await conn.DropTableAsync<Customer>();
             await conn.DropTableAsync<Order>();
@@ -327,7 +328,7 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
             await conn.CreateTableAsync<Order>();
 
             var customer = new Customer
-            { 
+            {
                 Name = "John Smith",
                 Orders = new []
                 {
@@ -362,7 +363,7 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
             }
 
             var newCustomer = new Customer
-            { 
+            {
                 Id = customer.Id,
                 Name = "John Smith",
                 Orders = new []
@@ -428,7 +429,7 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
         }
 
         [Test]
-        public async void TestOneToManyRecursiveInsertGuidAsync() {
+        public async Task TestOneToManyRecursiveInsertGuidAsync() {
             var conn = Utils.CreateAsyncConnection();
             await conn.DropTableAsync<CustomerGuid>();
             await conn.DropTableAsync<OrderGuid>();
@@ -436,7 +437,7 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
             await conn.CreateTableAsync<OrderGuid>();
 
             var customer = new CustomerGuid
-            { 
+            {
                 Id = Guid.NewGuid(),
                 Name = "John Smith",
                 Orders = new []
@@ -473,7 +474,7 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
         }
 
         [Test]
-        public async void TestOneToManyRecursiveInsertOrReplaceGuidAsync() {
+        public async Task TestOneToManyRecursiveInsertOrReplaceGuidAsync() {
             var conn = Utils.CreateAsyncConnection();
             await conn.DropTableAsync<CustomerGuid>();
             await conn.DropTableAsync<OrderGuid>();
@@ -481,7 +482,7 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
             await conn.CreateTableAsync<OrderGuid>();
 
             var customer = new CustomerGuid
-            { 
+            {
                 Id = Guid.NewGuid(),
                 Name = "John Smith",
                 Orders = new []
@@ -517,7 +518,7 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
             }
 
             var newCustomer = new CustomerGuid
-            { 
+            {
                 Id = customer.Id,
                 Name = "John Smith",
                 Orders = new []
@@ -562,7 +563,7 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
         /// one of the orders instead of the customer
         /// </summary>
         [Test]
-        public async void TestManyToOneRecursiveInsertAsync() {
+        public async Task TestManyToOneRecursiveInsertAsync() {
             var conn = Utils.CreateAsyncConnection();
             await conn.DropTableAsync<Customer>();
             await conn.DropTableAsync<Order>();
@@ -570,7 +571,7 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
             await conn.CreateTableAsync<Order>();
 
             var customer = new Customer
-            { 
+            {
                 Name = "John Smith",
                 Orders = new []
                 {
@@ -612,7 +613,7 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
         /// one of the orders instead of the customer
         /// </summary>
         [Test]
-        public async void TestManyToOneRecursiveInsertOrReplaceAsync() {
+        public async Task TestManyToOneRecursiveInsertOrReplaceAsync() {
             var conn = Utils.CreateAsyncConnection();
             await conn.DropTableAsync<Customer>();
             await conn.DropTableAsync<Order>();
@@ -620,7 +621,7 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
             await conn.CreateTableAsync<Order>();
 
             var customer = new Customer
-            { 
+            {
                 Name = "John Smith",
                 Orders = new []
                 {
@@ -657,7 +658,7 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
             }
 
             var newCustomer = new Customer
-            { 
+            {
                 Id = customer.Id,
                 Name = "John Smith",
                 Orders = new []
@@ -704,7 +705,7 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
         /// one of the orders instead of the customer
         /// </summary>
         [Test]
-        public async void TestManyToOneRecursiveInsertGuidAsync() {
+        public async Task TestManyToOneRecursiveInsertGuidAsync() {
             var conn = Utils.CreateAsyncConnection();
             await conn.DropTableAsync<CustomerGuid>();
             await conn.DropTableAsync<OrderGuid>();
@@ -712,7 +713,7 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
             await conn.CreateTableAsync<OrderGuid>();
 
             var customer = new CustomerGuid
-            { 
+            {
                 Id = Guid.NewGuid(),
                 Name = "John Smith",
                 Orders = new []
@@ -755,7 +756,7 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
         /// one of the orders instead of the customer
         /// </summary>
         [Test]
-        public async void TestManyToOneRecursiveInsertOrReplaceGuidAsync() {
+        public async Task TestManyToOneRecursiveInsertOrReplaceGuidAsync() {
             var conn = Utils.CreateAsyncConnection();
             await conn.DropTableAsync<CustomerGuid>();
             await conn.DropTableAsync<OrderGuid>();
@@ -763,7 +764,7 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
             await conn.CreateTableAsync<OrderGuid>();
 
             var customer = new CustomerGuid
-            { 
+            {
                 Id = Guid.NewGuid(),
                 Name = "John Smith",
                 Orders = new []
@@ -801,7 +802,7 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
             }
 
             var newCustomer = new CustomerGuid
-            { 
+            {
                 Id = customer.Id,
                 Name = "John Smith",
                 Orders = new []
@@ -879,7 +880,7 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
         }
 
         [Test]
-        public async void TestManyToManyRecursiveInsertWithSameClassRelationshipAsync() {
+        public async Task TestManyToManyRecursiveInsertWithSameClassRelationshipAsync() {
             // We will configure the following scenario
             // 'John' follows 'Peter' and 'Thomas'
             // 'Thomas' follows 'John'
@@ -970,7 +971,7 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
         }
 
         [Test]
-        public async void TestManyToManyRecursiveDeleteWithSameClassRelationshipAsync() {
+        public async Task TestManyToManyRecursiveDeleteWithSameClassRelationshipAsync() {
             // We will configure the following scenario
             // 'John' follows 'Peter' and 'Thomas'
             // 'Thomas' follows 'John'
@@ -1072,7 +1073,7 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
         }
 
         [Test]
-        public async void TestInsertTextBlobPropertiesRecursiveAsync() {
+        public async Task TestInsertTextBlobPropertiesRecursiveAsync() {
             var conn = Utils.CreateAsyncConnection();
             await conn.DropTableAsync<Student>();
             await conn.DropTableAsync<Teacher>();
