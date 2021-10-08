@@ -25,7 +25,7 @@ namespace SQLiteNetExtensionsAsync.Extensions
         {
 			return Task.Run(() =>
 			 {
-				 var connectionWithLock = SqliteAsyncConnectionWrapper.Lock(conn);
+				 var connectionWithLock = conn.GetConnection();
 				 using (connectionWithLock.Lock())
 				 {
 					 connectionWithLock.UpdateWithChildren(element);
@@ -49,7 +49,7 @@ namespace SQLiteNetExtensionsAsync.Extensions
         {
 			return Task.Run(() =>
 			 {
-				 var connectionWithLock = SqliteAsyncConnectionWrapper.Lock(conn);
+				 var connectionWithLock = conn.GetConnection();
 				 using (connectionWithLock.Lock())
 				 {
 					 connectionWithLock.InsertWithChildren(element, recursive);
@@ -73,7 +73,7 @@ namespace SQLiteNetExtensionsAsync.Extensions
         {
 			return Task.Run(() =>
 			 {
-				 var connectionWithLock = SqliteAsyncConnectionWrapper.Lock(conn);
+				 var connectionWithLock = conn.GetConnection();
 				 using (connectionWithLock.Lock())
 				 {
 					 connectionWithLock.InsertOrReplaceWithChildren(element, recursive);
@@ -97,7 +97,7 @@ namespace SQLiteNetExtensionsAsync.Extensions
         {
 			return Task.Run(() =>
 			 {
-				 var connectionWithLock = SqliteAsyncConnectionWrapper.Lock(conn);
+				 var connectionWithLock = conn.GetConnection();
 				 using (connectionWithLock.Lock())
 				 {
 					 connectionWithLock.InsertAllWithChildren(elements, recursive);
@@ -121,7 +121,7 @@ namespace SQLiteNetExtensionsAsync.Extensions
         {
 			return Task.Run(() =>
 			 {
-				 var connectionWithLock = SqliteAsyncConnectionWrapper.Lock(conn);
+				 var connectionWithLock = conn.GetConnection();
 				 using (connectionWithLock.Lock())
 				 {
 					 connectionWithLock.InsertOrReplaceAllWithChildren(elements, recursive);
@@ -143,7 +143,7 @@ namespace SQLiteNetExtensionsAsync.Extensions
         {
 			return Task.Run(() =>
 			 {
-				 var connectionWithLock = SqliteAsyncConnectionWrapper.Lock(conn);
+				 var connectionWithLock = conn.GetConnection();
 				 using (connectionWithLock.Lock())
 				 {
 					 connectionWithLock.DeleteAll(objects, recursive);
@@ -165,7 +165,7 @@ namespace SQLiteNetExtensionsAsync.Extensions
         {
 			return Task.Run(() =>
 			 {
-				 var connectionWithLock = SqliteAsyncConnectionWrapper.Lock(conn);
+				 var connectionWithLock = conn.GetConnection();
 				 using (connectionWithLock.Lock())
 				 {
 					 connectionWithLock.Delete(element, recursive);
@@ -184,7 +184,7 @@ namespace SQLiteNetExtensionsAsync.Extensions
         {
 			return Task.Run(() =>
 			 {
-				 var connectionWithLock = SqliteAsyncConnectionWrapper.Lock(conn);
+				 var connectionWithLock = conn.GetConnection();
 				 using (connectionWithLock.Lock())
 				 {
 					 connectionWithLock.DeleteAllIds<T>(primaryKeyValues);
