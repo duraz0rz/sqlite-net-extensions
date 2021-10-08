@@ -9,6 +9,7 @@
         <PackageProjectUrl>https://github.com/duraz0rz/sqlite-net-extensions</PackageProjectUrl>
         <PackageTags>sqlite;sqlite-net;net;extensions;orm;cascade;recursive</PackageTags>
         <LangVersion>default</LangVersion>
+        <PackageVersion>2.2.0-beta</PackageVersion>
     </PropertyGroup>
     <ItemGroup>
       <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
