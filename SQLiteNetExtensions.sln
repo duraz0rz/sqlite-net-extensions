@@ -15,7 +15,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NuGet", "NuGet", "{D2A928D0
 		SQLiteNetExtensions-MvvmCross.nuspec = SQLiteNetExtensions-MvvmCross.nuspec
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IntegrationTests", "Tests\IntegrationTests\IntegrationTests.csproj", "{DA924292-F0BF-4B32-9F5C-E59FB837841B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SQLiteNetExtensionsIntegrationTests", "Tests\SQLiteNetExtensionsIntegrationTests\SQLiteNetExtensionsIntegrationTests.csproj", "{DA924292-F0BF-4B32-9F5C-E59FB837841B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnitTests", "Tests\UnitTests\UnitTests.csproj", "{65ABB577-1EAC-46E3-BA42-B19B038A4730}"
 EndProject

@@ -2,10 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
-using SQLiteNetExtensions.Extensions;
 using SQLite;
+using SQLiteNetExtensions.Extensions;
+using SQLiteNetExtensions.IntegrationTests;
 
-namespace SQLiteNetExtensions.IntegrationTests.Tests
+namespace SQLiteNetExtensionsSQLiteNetExtensionsIntegrationTests.Tests
 {
     [TestFixture]
     public class DeleteTests

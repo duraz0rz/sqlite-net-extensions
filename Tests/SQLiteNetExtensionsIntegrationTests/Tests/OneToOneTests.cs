@@ -1,19 +1,17 @@
-using System;
-using System.Linq;
-using NUnit.Framework;
-using SQLiteNetExtensions.Attributes;
-using SQLiteNetExtensions.Extensions;
-
 #if USING_MVVMCROSS
 
 #else
 using SQLite;
 #endif
+using System;
+using System.Linq;
+using NUnit.Framework;
+using SQLiteNetExtensions.Attributes;
+using SQLiteNetExtensions.Extensions;
+using SQLiteNetExtensions.IntegrationTests;
 
-namespace SQLiteNetExtensions.IntegrationTests.Tests
+namespace SQLiteNetExtensionsIntegrationTests.Tests
 {
-       
-
     [TestFixture]
     public class OneToOneTests
     {

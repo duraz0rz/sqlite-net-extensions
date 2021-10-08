@@ -2,18 +2,21 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading.Tasks;
 using NUnit.Framework;
-using SQLiteNetExtensions.Attributes;
-using SQLiteNetExtensions.Extensions;
 using SQLite;
+using SQLiteNetExtensions.Attributes;
+using SQLiteNetExtensionsAsync.Extensions;
+// ReSharper disable UnusedAutoPropertyAccessor.Local
+// ReSharper disable PropertyCanBeMadeInitOnly.Local
+// ReSharper disable UnusedMember.Local
 
-namespace SQLiteNetExtensions.IntegrationTests.Tests
+namespace SQLiteNetExtensionsIntegrationTests.Tests.Async
 {
-
     [TestFixture]
-    public class ManyToManyTests
+    public class ManyToManyAsyncTests : BaseAsyncTest
     {
-        public class M2MClassA
+        private class M2MClassA
         {
             [PrimaryKey, AutoIncrement, Column("_id")]
             public int Id { get; set; }
@@ -24,7 +27,7 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
             public string Bar { get; set; }
         }
 
-        public class M2MClassB
+        private class M2MClassB
         {
             [PrimaryKey, AutoIncrement]
             public int Id { get; set; }
@@ -32,7 +35,7 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
             public string Foo { get; set; }
         }
 
-        public class ClassAClassB
+        private class ClassAClassB
         {
             [ForeignKey(typeof(M2MClassA)), Column("class_a_id")]
             public int ClassAId { get; set; }
@@ -41,7 +44,7 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
             public int ClassBId { get; set; }
         }
 
-        public class M2MClassC
+        private class M2MClassC
         {
             [PrimaryKey, AutoIncrement]
             public int Id { get; set; }
@@ -52,7 +55,7 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
             public string Bar { get; set; }
         }
 
-        public class M2MClassD
+        private class M2MClassD
         {
             [PrimaryKey, AutoIncrement]
             public int Id { get; set; }
@@ -60,7 +63,7 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
             public string Foo { get; set; }
         }
 
-        public class ClassCClassD
+        private class ClassCClassD
         {
             public int ClassCId { get; set; }   // ForeignKey attribute not needed, already specified in the ManyToMany relationship
             [ForeignKey(typeof(M2MClassD))]
@@ -68,7 +71,7 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
         }
 
         [Table("class_e")]
-        public class M2MClassE
+        private class M2MClassE
         {
             [PrimaryKey]
             public Guid Id { get; set; } // Guid identifier instead of int
@@ -79,7 +82,7 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
             public string Bar { get; set; }
         }
 
-        public class M2MClassF
+        private class M2MClassF
         {
             [PrimaryKey, AutoIncrement]
             public int Id { get; set; }
@@ -88,14 +91,14 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
         }
 
         [Table("class_e_class_f")]
-        public class ClassEClassF
+        private class ClassEClassF
         {
             public Guid ClassEId { get; set; }   // ForeignKey attribute not needed, already specified in the ManyToMany relationship
             [ForeignKey(typeof(M2MClassF))]
             public int ClassFId { get; set; }
         }
 
-        public class M2MClassG
+        private class M2MClassG
         {
             [PrimaryKey, AutoIncrement]
             public int Id { get; set; }
@@ -110,7 +113,7 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
         }
 
         [Table("M2MClassG_ClassG")]
-        public class ClassGClassG
+        private class ClassGClassG
         {
             [Column("Identifier")]
             [PrimaryKey, AutoIncrement]
@@ -122,7 +125,7 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
         }
 
         [Table("ClassH")]
-        public class M2MClassH
+        private class M2MClassH
         {
             [Column("_id")]
             [PrimaryKey, AutoIncrement]
@@ -138,7 +141,7 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
             public ObservableCollection<M2MClassH> Children { get; set; }
         }
 
-        public class ClassHClassH
+        private class ClassHClassH
         {
             [PrimaryKey, AutoIncrement]
             public int Id { get; set; }
@@ -147,9 +150,26 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
             public int ChildId { get; set; }
         }
 
+        [SetUp]
+        public async Task CreateTables()
+        {
+            await Connection.CreateTableAsync<M2MClassA>();
+            await Connection.CreateTableAsync<M2MClassB>();
+            await Connection.CreateTableAsync<ClassAClassB>();
+            await Connection.CreateTableAsync<M2MClassC>();
+            await Connection.CreateTableAsync<M2MClassD>();
+            await Connection.CreateTableAsync<ClassCClassD>();
+            await Connection.CreateTableAsync<M2MClassE>();
+            await Connection.CreateTableAsync<M2MClassF>();
+            await Connection.CreateTableAsync<ClassEClassF>();
+            await Connection.CreateTableAsync<M2MClassG>();
+            await Connection.CreateTableAsync<ClassGClassG>();
+            await Connection.CreateTableAsync<M2MClassH>();
+            await Connection.CreateTableAsync<ClassHClassH>();
+        }
 
         [Test]
-        public void TestGetManyToManyList()
+        public async Task TestGetManyToManyList()
         {
             // In this test we will create a N:M relationship between objects of ClassA and ClassB
             //      Class A     -       Class B
@@ -159,49 +179,25 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
             //          3       -       1, 2, 3
             //          4       -       1, 2, 3, 4
 
-            var conn = Utils.CreateConnection();
-            conn.DropTable<M2MClassA>();
-            conn.DropTable<M2MClassB>();
-            conn.DropTable<ClassAClassB>();
-            conn.CreateTable<M2MClassA>();
-            conn.CreateTable<M2MClassB>();
-            conn.CreateTable<ClassAClassB>();
-
             // Use standard SQLite-Net API to create the objects
             var objectsB = new List<M2MClassB>
             {
-                new M2MClassB {
-                    Foo = string.Format("1- Foo String {0}", new Random().Next(100))
-                },
-                new M2MClassB {
-                    Foo = string.Format("2- Foo String {0}", new Random().Next(100))
-                },
-                new M2MClassB {
-                    Foo = string.Format("3- Foo String {0}", new Random().Next(100))
-                },
-                new M2MClassB {
-                    Foo = string.Format("4- Foo String {0}", new Random().Next(100))
-                }
+                new() { Foo = $"1- Foo String {new Random().Next(100)}" },
+                new() { Foo = $"2- Foo String {new Random().Next(100)}" },
+                new() { Foo = $"3- Foo String {new Random().Next(100)}" },
+                new() { Foo = $"4- Foo String {new Random().Next(100)}" }
             };
-            conn.InsertAll(objectsB);
+            await Connection.InsertAllAsync(objectsB);
 
             var objectsA = new List<M2MClassA>
             {
-                new M2MClassA {
-                    Bar = string.Format("1- Bar String {0}", new Random().Next(100))
-                },
-                new M2MClassA {
-                    Bar = string.Format("2- Bar String {0}", new Random().Next(100))
-                },
-                new M2MClassA {
-                    Bar = string.Format("3- Bar String {0}", new Random().Next(100))
-                },
-                new M2MClassA {
-                    Bar = string.Format("4- Bar String {0}", new Random().Next(100))
-                }
+                new() { Bar = $"1- Bar String {new Random().Next(100)}" },
+                new() { Bar = $"2- Bar String {new Random().Next(100)}" },
+                new() { Bar = $"3- Bar String {new Random().Next(100)}" },
+                new() { Bar = $"4- Bar String {new Random().Next(100)}" }
             };
 
-            conn.InsertAll(objectsA);
+            await Connection.InsertAllAsync(objectsA);
 
             foreach (var objectA in objectsA)
             {
@@ -209,7 +205,7 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
                 Assert.Null(objectA.BObjects);
 
                 // Fetch (yet empty) the relationship
-                conn.GetChildren(copyA);
+                await Connection.GetChildrenAsync(copyA);
 
                 Assert.NotNull(copyA.BObjects);
                 Assert.AreEqual(0, copyA.BObjects.Count);
@@ -221,7 +217,7 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
             {
                 for (var bIndex = 0; bIndex <= aIndex; bIndex++)
                 {
-                    conn.Insert(new ClassAClassB
+                    await Connection.InsertAsync(new ClassAClassB
                     {
                         ClassAId = objectsA[aIndex].Id,
                         ClassBId = objectsB[bIndex].Id
@@ -239,7 +235,7 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
                 Assert.AreEqual(0, objectA.BObjects.Count);
 
                 // Fetch the relationship
-                conn.GetChildren(objectA);
+                await Connection.GetChildrenAsync(objectA);
 
                 var childrenCount = i + 1;
 
@@ -254,7 +250,7 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
         }
 
         [Test]
-        public void TestGetManyToManyArray()
+        public async Task TestGetManyToManyArray()
         {
             // In this test we will create a N:M relationship between objects of ClassC and ClassD
             //      Class C     -       Class D
@@ -264,49 +260,25 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
             //          3       -       1, 2, 3
             //          4       -       1, 2, 3, 4
 
-            var conn = Utils.CreateConnection();
-            conn.DropTable<M2MClassC>();
-            conn.DropTable<M2MClassD>();
-            conn.DropTable<ClassCClassD>();
-            conn.CreateTable<M2MClassC>();
-            conn.CreateTable<M2MClassD>();
-            conn.CreateTable<ClassCClassD>();
-
             // Use standard SQLite-Net API to create the objects
             var objectsD = new List<M2MClassD>
             {
-                new M2MClassD {
-                    Foo = string.Format("1- Foo String {0}", new Random().Next(100))
-                },
-                new M2MClassD {
-                    Foo = string.Format("2- Foo String {0}", new Random().Next(100))
-                },
-                new M2MClassD {
-                    Foo = string.Format("3- Foo String {0}", new Random().Next(100))
-                },
-                new M2MClassD {
-                    Foo = string.Format("4- Foo String {0}", new Random().Next(100))
-                }
+                new() { Foo = $"1- Foo String {new Random().Next(100)}" },
+                new() { Foo = $"2- Foo String {new Random().Next(100)}" },
+                new() { Foo = $"3- Foo String {new Random().Next(100)}" },
+                new() { Foo = $"4- Foo String {new Random().Next(100)}" }
             };
-            conn.InsertAll(objectsD);
+            await Connection.InsertAllAsync(objectsD);
 
             var objectsC = new List<M2MClassC>
             {
-                new M2MClassC {
-                    Bar = string.Format("1- Bar String {0}", new Random().Next(100))
-                },
-                new M2MClassC {
-                    Bar = string.Format("2- Bar String {0}", new Random().Next(100))
-                },
-                new M2MClassC {
-                    Bar = string.Format("3- Bar String {0}", new Random().Next(100))
-                },
-                new M2MClassC {
-                    Bar = string.Format("4- Bar String {0}", new Random().Next(100))
-                }
+                new() { Bar = $"1- Bar String {new Random().Next(100)}" },
+                new() { Bar = $"2- Bar String {new Random().Next(100)}" },
+                new() { Bar = $"3- Bar String {new Random().Next(100)}" },
+                new() { Bar = $"4- Bar String {new Random().Next(100)}" }
             };
 
-            conn.InsertAll(objectsC);
+            await Connection.InsertAllAsync(objectsC);
 
             foreach (var objectC in objectsC)
             {
@@ -314,7 +286,7 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
                 Assert.Null(objectC.DObjects);
 
                 // Fetch (yet empty) the relationship
-                conn.GetChildren(copyC);
+                await Connection.GetChildrenAsync(copyC);
 
                 Assert.NotNull(copyC.DObjects);
                 Assert.AreEqual(0, copyC.DObjects.Length);
@@ -326,7 +298,7 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
             {
                 for (var dIndex = 0; dIndex <= cIndex; dIndex++)
                 {
-                    conn.Insert(new ClassCClassD
+                    await Connection.InsertAsync(new ClassCClassD
                     {
                         ClassCId = objectsC[cIndex].Id,
                         ClassDId = objectsD[dIndex].Id
@@ -344,7 +316,7 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
                 Assert.AreEqual(0, objectC.DObjects.Length);
 
                 // Fetch the relationship
-                conn.GetChildren(objectC);
+                await Connection.GetChildrenAsync(objectC);
 
                 var childrenCount = i + 1;
 
@@ -359,7 +331,7 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
         }
 
         [Test]
-        public void TestUpdateSetManyToManyList()
+        public async Task TestUpdateSetManyToManyList()
         {
             // In this test we will create a N:M relationship between objects of ClassA and ClassB
             //      Class A     -       Class B
@@ -369,53 +341,41 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
             //          3       -       1, 2, 3
             //          4       -       1, 2, 3, 4
 
-            var conn = Utils.CreateConnection();
-            conn.DropTable<M2MClassA>();
-            conn.DropTable<M2MClassB>();
-            conn.DropTable<ClassAClassB>();
-            conn.CreateTable<M2MClassA>();
-            conn.CreateTable<M2MClassB>();
-            conn.CreateTable<ClassAClassB>();
-
             // Use standard SQLite-Net API to create the objects
             var objectsB = new List<M2MClassB>
             {
-                new M2MClassB {
-                    Foo = string.Format("1- Foo String {0}", new Random().Next(100))
-                },
-                new M2MClassB {
-                    Foo = string.Format("2- Foo String {0}", new Random().Next(100))
-                },
-                new M2MClassB {
-                    Foo = string.Format("3- Foo String {0}", new Random().Next(100))
-                },
-                new M2MClassB {
-                    Foo = string.Format("4- Foo String {0}", new Random().Next(100))
-                }
+                new() { Foo = $"1- Foo String {new Random().Next(100)}" },
+                new() { Foo = $"2- Foo String {new Random().Next(100)}" },
+                new() { Foo = $"3- Foo String {new Random().Next(100)}" },
+                new() { Foo = $"4- Foo String {new Random().Next(100)}" }
             };
-            conn.InsertAll(objectsB);
+            await Connection.InsertAllAsync(objectsB);
 
             var objectsA = new List<M2MClassA>
             {
-                new M2MClassA {
-                    Bar = string.Format("1- Bar String {0}", new Random().Next(100)),
+                new()
+                {
+                    Bar = $"1- Bar String {new Random().Next(100)}",
                     BObjects = new List<M2MClassB>()
                 },
-                new M2MClassA {
-                    Bar = string.Format("2- Bar String {0}", new Random().Next(100)),
+                new()
+                {
+                    Bar = $"2- Bar String {new Random().Next(100)}",
                     BObjects = new List<M2MClassB>()
                 },
-                new M2MClassA {
-                    Bar = string.Format("3- Bar String {0}", new Random().Next(100)),
+                new()
+                {
+                    Bar = $"3- Bar String {new Random().Next(100)}",
                     BObjects = new List<M2MClassB>()
                 },
-                new M2MClassA {
-                    Bar = string.Format("4- Bar String {0}", new Random().Next(100)),
+                new()
+                {
+                    Bar = $"4- Bar String {new Random().Next(100)}",
                     BObjects = new List<M2MClassB>()
                 }
             };
 
-            conn.InsertAll(objectsA);
+            await Connection.InsertAllAsync(objectsA);
 
             // Create the relationships
             for (var aIndex = 0; aIndex < objectsA.Count; aIndex++)
@@ -428,18 +388,18 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
                     objectA.BObjects.Add(objectB);
                 }
 
-                conn.UpdateWithChildren(objectA);
+                await Connection.UpdateWithChildrenAsync(objectA);
             }
-
 
             for (var i = 0; i < objectsA.Count; i++)
             {
                 var objectA = objectsA[i];
                 var childrenCount = i + 1;
-                List<int> storedChildKeyList = (from ClassAClassB ab in conn.Table<ClassAClassB>()
-                                                where ab.ClassAId == objectA.Id
-                                                select ab.ClassBId).ToList();
-
+                var storedChildKeyList =
+                    (await Connection.Table<ClassAClassB>()
+                        .Where(ab => ab.ClassAId == objectA.Id)
+                        .ToListAsync())
+                    .Select(ab => ab.ClassBId).ToList();
 
                 Assert.AreEqual(childrenCount, storedChildKeyList.Count(), "Relationship count is not correct");
                 var expectedChildIds = objectsB.GetRange(0, childrenCount).Select(objectB => objectB.Id).ToList();
@@ -451,7 +411,7 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
         }
 
         [Test]
-        public void TestUpdateUnsetManyToManyList()
+        public async Task TestUpdateUnsetManyToManyList()
         {
             // In this test we will create a N:M relationship between objects of ClassA and ClassB
             //      Class A     -       Class B
@@ -469,54 +429,41 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
             //          3       -       3
             //          4       -       3, 4
 
-
-            var conn = Utils.CreateConnection();
-            conn.DropTable<M2MClassA>();
-            conn.DropTable<M2MClassB>();
-            conn.DropTable<ClassAClassB>();
-            conn.CreateTable<M2MClassA>();
-            conn.CreateTable<M2MClassB>();
-            conn.CreateTable<ClassAClassB>();
-
             // Use standard SQLite-Net API to create the objects
             var objectsB = new List<M2MClassB>
             {
-                new M2MClassB {
-                    Foo = string.Format("1- Foo String {0}", new Random().Next(100))
-                },
-                new M2MClassB {
-                    Foo = string.Format("2- Foo String {0}", new Random().Next(100))
-                },
-                new M2MClassB {
-                    Foo = string.Format("3- Foo String {0}", new Random().Next(100))
-                },
-                new M2MClassB {
-                    Foo = string.Format("4- Foo String {0}", new Random().Next(100))
-                }
+                new() { Foo = $"1- Foo String {new Random().Next(100)}" },
+                new() { Foo = $"2- Foo String {new Random().Next(100)}" },
+                new() { Foo = $"3- Foo String {new Random().Next(100)}" },
+                new() { Foo = $"4- Foo String {new Random().Next(100)}" }
             };
-            conn.InsertAll(objectsB);
+            await Connection.InsertAllAsync(objectsB);
 
             var objectsA = new List<M2MClassA>
             {
-                new M2MClassA {
-                    Bar = string.Format("1- Bar String {0}", new Random().Next(100)),
+                new()
+                {
+                    Bar = $"1- Bar String {new Random().Next(100)}",
                     BObjects = new List<M2MClassB>()
                 },
-                new M2MClassA {
-                    Bar = string.Format("2- Bar String {0}", new Random().Next(100)),
+                new()
+                {
+                    Bar = $"2- Bar String {new Random().Next(100)}",
                     BObjects = new List<M2MClassB>()
                 },
-                new M2MClassA {
-                    Bar = string.Format("3- Bar String {0}", new Random().Next(100)),
+                new()
+                {
+                    Bar = $"3- Bar String {new Random().Next(100)}",
                     BObjects = new List<M2MClassB>()
                 },
-                new M2MClassA {
-                    Bar = string.Format("4- Bar String {0}", new Random().Next(100)),
+                new()
+                {
+                    Bar = $"4- Bar String {new Random().Next(100)}",
                     BObjects = new List<M2MClassB>()
                 }
             };
 
-            conn.InsertAll(objectsA);
+            await Connection.InsertAllAsync(objectsA);
 
             // Create the relationships
             for (var aIndex = 0; aIndex < objectsA.Count; aIndex++)
@@ -529,7 +476,7 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
                     objectA.BObjects.Add(objectB);
                 }
 
-                conn.UpdateWithChildren(objectA);
+                await Connection.UpdateWithChildrenAsync(objectA);
             }
 
             // At these points all the relationships are set
@@ -546,7 +493,7 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
             foreach (var objectA in objectsA)
             {
                 objectA.BObjects.RemoveAll(objectsBToRemove.Contains);
-                conn.UpdateWithChildren(objectA);
+                await Connection.UpdateWithChildrenAsync(objectA);
             }
 
             // This should now be the current status of all relationships
@@ -562,13 +509,13 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
             {
                 var objectA = objectsA[i];
 
-                List<int> storedChildKeyList = (from ClassAClassB ab in conn.Table<ClassAClassB>()
-                                                where ab.ClassAId == objectA.Id
-                                                select ab.ClassBId).ToList();
-
+                var storedChildKeyList =
+                    (await Connection.Table<ClassAClassB>().Where(ab => ab.ClassAId == objectA.Id).ToListAsync())
+                    .Select(ab => ab.ClassBId).ToList();
 
                 var expectedChildIds = objectsB.GetRange(0, i + 1).Where(b => !objectsBToRemove.Contains(b)).Select(objectB => objectB.Id).ToList();
-                Assert.AreEqual(expectedChildIds.Count, storedChildKeyList.Count, string.Format("Relationship count is not correct for Object with Id {0}", objectA.Id));
+                Assert.AreEqual(expectedChildIds.Count, storedChildKeyList.Count,
+                    $"Relationship count is not correct for Object with Id {objectA.Id}");
                 foreach (var objectBKey in storedChildKeyList)
                 {
                     Assert.IsTrue(expectedChildIds.Contains(objectBKey), "Relationship ID is not correct");
@@ -577,7 +524,7 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
         }
 
         [Test]
-        public void TestGetManyToManyGuidIdentifier()
+        public async Task TestGetManyToManyGuidIdentifier()
         {
             // In this test we will create a N:M relationship between objects of ClassE and ClassF
             //      Class E     -       Class F
@@ -587,53 +534,41 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
             //          3       -       1, 2, 3
             //          4       -       1, 2, 3, 4
 
-            var conn = Utils.CreateConnection();
-            conn.DropTable<M2MClassE>();
-            conn.DropTable<M2MClassF>();
-            conn.DropTable<ClassEClassF>();
-            conn.CreateTable<M2MClassE>();
-            conn.CreateTable<M2MClassF>();
-            conn.CreateTable<ClassEClassF>();
-
             // Use standard SQLite-Net API to create the objects
             var objectsF = new List<M2MClassF>
             {
-                new M2MClassF {
-                    Foo = string.Format("1- Foo String {0}", new Random().Next(100))
-                },
-                new M2MClassF {
-                    Foo = string.Format("2- Foo String {0}", new Random().Next(100))
-                },
-                new M2MClassF {
-                    Foo = string.Format("3- Foo String {0}", new Random().Next(100))
-                },
-                new M2MClassF {
-                    Foo = string.Format("4- Foo String {0}", new Random().Next(100))
-                }
+                new() { Foo = $"1- Foo String {new Random().Next(100)}" },
+                new() { Foo = $"2- Foo String {new Random().Next(100)}" },
+                new() { Foo = $"3- Foo String {new Random().Next(100)}" },
+                new() { Foo = $"4- Foo String {new Random().Next(100)}" }
             };
-            conn.InsertAll(objectsF);
+            await Connection.InsertAllAsync(objectsF);
 
             var objectsE = new List<M2MClassE>
             {
-                new M2MClassE {
+                new()
+                {
                     Id = Guid.NewGuid(),
-                    Bar = string.Format("1- Bar String {0}", new Random().Next(100))
+                    Bar = $"1- Bar String {new Random().Next(100)}"
                 },
-                new M2MClassE {
+                new()
+                {
                     Id = Guid.NewGuid(),
-                    Bar = string.Format("2- Bar String {0}", new Random().Next(100))
+                    Bar = $"2- Bar String {new Random().Next(100)}"
                 },
-                new M2MClassE {
+                new()
+                {
                     Id = Guid.NewGuid(),
-                    Bar = string.Format("3- Bar String {0}", new Random().Next(100))
+                    Bar = $"3- Bar String {new Random().Next(100)}"
                 },
-                new M2MClassE {
+                new()
+                {
                     Id = Guid.NewGuid(),
-                    Bar = string.Format("4- Bar String {0}", new Random().Next(100))
+                    Bar = $"4- Bar String {new Random().Next(100)}"
                 }
             };
 
-            conn.InsertAll(objectsE);
+            await Connection.InsertAllAsync(objectsE);
 
             foreach (var objectE in objectsE)
             {
@@ -641,7 +576,7 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
                 Assert.Null(objectE.FObjects);
 
                 // Fetch (yet empty) the relationship
-                conn.GetChildren(copyE);
+                await Connection.GetChildrenAsync(copyE);
 
                 Assert.NotNull(copyE.FObjects);
                 Assert.AreEqual(0, copyE.FObjects.Length);
@@ -653,7 +588,7 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
             {
                 for (var fIndex = 0; fIndex <= eIndex; fIndex++)
                 {
-                    conn.Insert(new ClassEClassF
+                    await Connection.InsertAsync(new ClassEClassF
                     {
                         ClassEId = objectsE[eIndex].Id,
                         ClassFId = objectsF[fIndex].Id
@@ -671,7 +606,7 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
                 Assert.AreEqual(0, objectE.FObjects.Length);
 
                 // Fetch the relationship
-                conn.GetChildren(objectE);
+                await Connection.GetChildrenAsync(objectE);
 
                 var childrenCount = i + 1;
 
@@ -686,7 +621,7 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
         }
 
         [Test]
-        public void TestManyToManyCircular()
+        public async Task TestManyToManyCircular()
         {
             // In this test we will create a many to many relationship between instances of the same class
             // including inverse relationship
@@ -698,14 +633,8 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
             //                  /  \ /  \
             //                 4    5    6
             //
-            // To implement it, only relationshipd of objects [2] and [3] are going to be persisted,
+            // To implement it, only relationships of objects [2] and [3] are going to be persisted,
             // the inverse relationships will be discovered automatically
-
-            var conn = Utils.CreateConnection();
-            conn.DropTable<M2MClassG>();
-            conn.DropTable<ClassGClassG>();
-            conn.CreateTable<M2MClassG>();
-            conn.CreateTable<ClassGClassG>();
 
             var object1 = new M2MClassG { Name = "Object 1" };
             var object2 = new M2MClassG { Name = "Object 2" };
@@ -715,15 +644,15 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
             var object6 = new M2MClassG { Name = "Object 6" };
 
             var objects = new List<M2MClassG> { object1, object2, object3, object4, object5, object6 };
-            conn.InsertAll(objects);
+            await Connection.InsertAllAsync(objects);
 
             object2.Parents = new ObservableCollection<M2MClassG> { object1 };
             object2.Children = new List<M2MClassG> { object4, object5 };
-            conn.UpdateWithChildren(object2);
+            await Connection.UpdateWithChildrenAsync(object2);
 
             object3.Parents = new ObservableCollection<M2MClassG> { object1 };
             object3.Children = new List<M2MClassG> { object5, object6 };
-            conn.UpdateWithChildren(object3);
+            await Connection.UpdateWithChildrenAsync(object3);
 
             // These relationships are discovered on runtime, assign them to check for correctness below
             object1.Children = new List<M2MClassG> { object2, object3 };
@@ -733,7 +662,9 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
 
             foreach (var expected in objects)
             {
-                var obtained = conn.GetWithChildren<M2MClassG>(expected.Id);
+                var obtained = await Connection.GetWithChildrenAsync<M2MClassG>(expected.Id);
+
+                if (obtained?.Children == null || obtained.Parents == null) Assert.Fail("obtained, its parents or its children were null");
 
                 Assert.AreEqual(expected.Name, obtained.Name);
                 Assert.AreEqual((expected.Children ?? new List<M2MClassG>()).Count, (obtained.Children ?? new List<M2MClassG>()).Count, obtained.Name);
@@ -748,7 +679,7 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
         }
 
         [Test]
-        public void TestManyToManyCircularReadOnly()
+        public async Task TestManyToManyCircularReadOnly()
         {
             // In this test we will create a many to many relationship between instances of the same class
             // including inverse relationship
@@ -760,14 +691,8 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
             //                  /  \ /  \
             //                 4    5    6
             //
-            // To implement it, only children relationshipd of objects [1], [2] and [3] are going to be persisted,
+            // To implement it, only children relationships of objects [1], [2] and [3] are going to be persisted,
             // the inverse relationships will be discovered automatically
-
-            var conn = Utils.CreateConnection();
-            conn.DropTable<M2MClassH>();
-            conn.DropTable<ClassHClassH>();
-            conn.CreateTable<M2MClassH>();
-            conn.CreateTable<ClassHClassH>();
 
             var object1 = new M2MClassH { Name = "Object 1" };
             var object2 = new M2MClassH { Name = "Object 2" };
@@ -777,16 +702,16 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
             var object6 = new M2MClassH { Name = "Object 6" };
 
             var objects = new List<M2MClassH> { object1, object2, object3, object4, object5, object6 };
-            conn.InsertAll(objects);
+            await Connection.InsertAllAsync(objects);
 
             object1.Children = new ObservableCollection<M2MClassH> { object2, object3 };
-            conn.UpdateWithChildren(object1);
+            await Connection.UpdateWithChildrenAsync(object1);
 
             object2.Children = new ObservableCollection<M2MClassH> { object4, object5 };
-            conn.UpdateWithChildren(object2);
+            await Connection.UpdateWithChildrenAsync(object2);
 
             object3.Children = new ObservableCollection<M2MClassH> { object5, object6 };
-            conn.UpdateWithChildren(object3);
+            await Connection.UpdateWithChildrenAsync(object3);
 
             // These relationships are discovered on runtime, assign them to check for correctness below
             object2.Parents = new List<M2MClassH> { object1 };
@@ -797,7 +722,9 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
 
             foreach (var expected in objects)
             {
-                var obtained = conn.GetWithChildren<M2MClassH>(expected.Id);
+                var obtained = await Connection.GetWithChildrenAsync<M2MClassH>(expected.Id);
+
+                if (obtained?.Children == null || obtained.Parents == null) Assert.Fail("obtained, its parents or its children were null");
 
                 Assert.AreEqual(expected.Name, obtained.Name);
                 Assert.AreEqual((expected.Children ?? new ObservableCollection<M2MClassH>()).Count, (obtained.Children ?? new ObservableCollection<M2MClassH>()).Count, obtained.Name);

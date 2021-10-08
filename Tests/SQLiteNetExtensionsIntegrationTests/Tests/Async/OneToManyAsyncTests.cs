@@ -2,19 +2,22 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading.Tasks;
 using NUnit.Framework;
-using SQLiteNetExtensions.Attributes;
-using SQLiteNetExtensions.Extensions;
 using SQLite;
+using SQLiteNetExtensions.Attributes;
+using SQLiteNetExtensionsAsync.Extensions;
 
-namespace SQLiteNetExtensions.IntegrationTests.Tests
+// ReSharper disable UnusedAutoPropertyAccessor.Local
+// ReSharper disable PropertyCanBeMadeInitOnly.Local
+
+namespace SQLiteNetExtensionsIntegrationTests.Tests.Async
 {
-
     [TestFixture]
-    public class OneToManyTests
+    public class OneToManyAsyncTests : BaseAsyncTest
     {
         [Table("ClassA")]
-        public class O2MClassA
+        private class O2MClassA
         {
             [PrimaryKey, AutoIncrement, Column("PrimaryKey")]
             public int Id { get; set; }
@@ -26,7 +29,7 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
         }
 
         [Table("ClassB")]
-        public class O2MClassB
+        private class O2MClassB
         {
             [PrimaryKey, AutoIncrement]
             public int Id { get; set; }
@@ -37,7 +40,7 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
             public string Foo { get; set; }
         }
 
-        public class O2MClassC
+        private class O2MClassC
         {
             [PrimaryKey, AutoIncrement]
             public int Id { get; set; }
@@ -48,7 +51,7 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
             public string Bar { get; set; }
         }
 
-        public class O2MClassD
+        private class O2MClassD
         {
             [PrimaryKey, AutoIncrement]
             public int Id { get; set; }
@@ -62,7 +65,7 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
             public string Foo { get; set; }
         }
 
-        public class O2MClassE
+        private class O2MClassE
         {
             [PrimaryKey, AutoIncrement]
             public int Id { get; set; }
@@ -73,7 +76,7 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
             public string Bar { get; set; }
         }
 
-        public class O2MClassF
+        private class O2MClassF
         {
             [PrimaryKey, AutoIncrement]
             public int Id { get; set; }
@@ -83,7 +86,7 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
             public string Foo { get; set; }
         }
 
-        public class O2MClassG
+        private class O2MClassG
         {
             [PrimaryKey]
             public Guid Guid { get; set; }
@@ -94,7 +97,7 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
             public string Bar { get; set; }
         }
 
-        public class O2MClassH
+        private class O2MClassH
         {
             [PrimaryKey]
             public Guid Guid { get; set; }
@@ -108,15 +111,23 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
             public string Foo { get; set; }
         }
 
-        [Test]
-        public void TestGetOneToManyList()
+        [SetUp]
+        public async Task SetUp()
         {
-            var conn = Utils.CreateConnection();
-            conn.DropTable<O2MClassA>();
-            conn.DropTable<O2MClassB>();
-            conn.CreateTable<O2MClassA>();
-            conn.CreateTable<O2MClassB>();
+            await Connection.CreateTableAsync<O2MClassA>();
+            await Connection.CreateTableAsync<O2MClassB>();
+            await Connection.CreateTableAsync<O2MClassC>();
+            await Connection.CreateTableAsync<O2MClassD>();
+            await Connection.CreateTableAsync<O2MClassE>();
+            await Connection.CreateTableAsync<O2MClassF>();
+            await Connection.CreateTableAsync<O2MClassG>();
+            await Connection.CreateTableAsync<O2MClassH>();
+            await Connection.CreateTableAsync<Employee>();
+        }
 
+        [Test]
+        public async Task TestGetOneToManyList()
+        {
             // Use standard SQLite-Net API to create the objects
             var objectsB = new List<O2MClassB>
             {
@@ -133,15 +144,15 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
                     Foo = string.Format("4- Foo String {0}", new Random().Next(100))
                 }
             };
-            conn.InsertAll(objectsB);
+            await Connection.InsertAllAsync(objectsB);
 
             var objectA = new O2MClassA();
-            conn.Insert(objectA);
+            await Connection.InsertAsync(objectA);
 
             Assert.Null(objectA.BObjects);
 
             // Fetch (yet empty) the relationship
-            conn.GetChildren(objectA);
+            await Connection.GetChildrenAsync(objectA);
             Assert.NotNull(objectA.BObjects);
             Assert.AreEqual(0, objectA.BObjects.Count);
 
@@ -149,14 +160,14 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
             foreach (var objectB in objectsB)
             {
                 objectB.ClassAKey = objectA.Id;
-                conn.Update(objectB);
+                await Connection.UpdateAsync(objectB);
             }
 
             Assert.NotNull(objectA.BObjects);
             Assert.AreEqual(0, objectA.BObjects.Count);
 
             // Fetch the relationship
-            conn.GetChildren(objectA);
+            await Connection.GetChildrenAsync(objectA);
 
             Assert.NotNull(objectA.BObjects);
             Assert.AreEqual(objectsB.Count, objectA.BObjects.Count);
@@ -168,14 +179,8 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
         }
 
         [Test]
-        public void TestGetOneToManyListWithInverse()
+        public async Task TestGetOneToManyListWithInverse()
         {
-            var conn = Utils.CreateConnection();
-            conn.DropTable<O2MClassC>();
-            conn.DropTable<O2MClassD>();
-            conn.CreateTable<O2MClassC>();
-            conn.CreateTable<O2MClassD>();
-
             // Use standard SQLite-Net API to create the objects
             var objectsD = new List<O2MClassD>
             {
@@ -192,15 +197,15 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
                     Foo = string.Format("4- Foo String {0}", new Random().Next(100))
                 }
             };
-            conn.InsertAll(objectsD);
+            await Connection.InsertAllAsync(objectsD);
 
             var objectC = new O2MClassC();
-            conn.Insert(objectC);
+            await Connection.InsertAsync(objectC);
 
             Assert.Null(objectC.DObjects);
 
             // Fetch (yet empty) the relationship
-            conn.GetChildren(objectC);
+            await Connection.GetChildrenAsync(objectC);
             Assert.NotNull(objectC.DObjects);
             Assert.AreEqual(0, objectC.DObjects.Count);
 
@@ -208,14 +213,14 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
             foreach (var objectD in objectsD)
             {
                 objectD.ClassCKey = objectC.Id;
-                conn.Update(objectD);
+                await Connection.UpdateAsync(objectD);
             }
 
             Assert.NotNull(objectC.DObjects);
             Assert.AreEqual(0, objectC.DObjects.Count);
 
             // Fetch the relationship
-            conn.GetChildren(objectC);
+            await Connection.GetChildrenAsync(objectC);
 
             Assert.NotNull(objectC.DObjects);
             Assert.AreEqual(objectsD.Count, objectC.DObjects.Count);
@@ -230,14 +235,8 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
         }
 
         [Test]
-        public void TestGetOneToManyArray()
+        public async Task TestGetOneToManyArray()
         {
-            var conn = Utils.CreateConnection();
-            conn.DropTable<O2MClassE>();
-            conn.DropTable<O2MClassF>();
-            conn.CreateTable<O2MClassE>();
-            conn.CreateTable<O2MClassF>();
-
             // Use standard SQLite-Net API to create the objects
             var objectsF = new[]
             {
@@ -254,15 +253,15 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
                     Foo = string.Format("4- Foo String {0}", new Random().Next(100))
                 }
             };
-            conn.InsertAll(objectsF);
+            await Connection.InsertAllAsync(objectsF);
 
             var objectE = new O2MClassE();
-            conn.Insert(objectE);
+            await Connection.InsertAsync(objectE);
 
             Assert.Null(objectE.FObjects);
 
             // Fetch (yet empty) the relationship
-            conn.GetChildren(objectE);
+            await Connection.GetChildrenAsync(objectE);
             Assert.NotNull(objectE.FObjects);
             Assert.AreEqual(0, objectE.FObjects.Length);
 
@@ -270,14 +269,14 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
             foreach (var objectB in objectsF)
             {
                 objectB.ClassEKey = objectE.Id;
-                conn.Update(objectB);
+                await Connection.UpdateAsync(objectB);
             }
 
             Assert.NotNull(objectE.FObjects);
             Assert.AreEqual(0, objectE.FObjects.Length);
 
             // Fetch the relationship
-            conn.GetChildren(objectE);
+            await Connection.GetChildrenAsync(objectE);
 
             Assert.NotNull(objectE.FObjects);
             Assert.AreEqual(objectsF.Length, objectE.FObjects.Length);
@@ -289,14 +288,8 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
         }
 
         [Test]
-        public void TestUpdateSetOneToManyList()
+        public async Task TestUpdateSetOneToManyList()
         {
-            var conn = Utils.CreateConnection();
-            conn.DropTable<O2MClassA>();
-            conn.DropTable<O2MClassB>();
-            conn.CreateTable<O2MClassA>();
-            conn.CreateTable<O2MClassB>();
-
             // Use standard SQLite-Net API to create the objects
             var objectsB = new List<O2MClassB>
             {
@@ -313,10 +306,10 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
                     Foo = string.Format("4- Foo String {0}", new Random().Next(100))
                 }
             };
-            conn.InsertAll(objectsB);
+            await Connection.InsertAllAsync(objectsB);
 
             var objectA = new O2MClassA();
-            conn.Insert(objectA);
+            await Connection.InsertAsync(objectA);
 
             Assert.Null(objectA.BObjects);
 
@@ -328,28 +321,22 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
             }
 
 
-            conn.UpdateWithChildren(objectA);
+            await Connection.UpdateWithChildrenAsync(objectA);
 
             foreach (var objectB in objectA.BObjects)
             {
                 Assert.AreEqual(objectA.Id, objectB.ClassAKey, "Foreign keys haven't been updated yet");
 
                 // Check database values
-                var newObjectB = conn.Get<O2MClassB>(objectB.Id);
+                var newObjectB = await Connection.GetAsync<O2MClassB>(objectB.Id);
                 Assert.AreEqual(objectA.Id, newObjectB.ClassAKey, "Database stored value is not correct");
             }
 
         }
 
         [Test]
-        public void TestUpdateUnsetOneToManyEmptyList()
+        public async Task TestUpdateUnsetOneToManyEmptyList()
         {
-            var conn = Utils.CreateConnection();
-            conn.DropTable<O2MClassA>();
-            conn.DropTable<O2MClassB>();
-            conn.CreateTable<O2MClassA>();
-            conn.CreateTable<O2MClassB>();
-
             // Use standard SQLite-Net API to create the objects
             var objectsB = new List<O2MClassB>
             {
@@ -366,10 +353,10 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
                     Foo = string.Format("4- Foo String {0}", new Random().Next(100))
                 }
             };
-            conn.InsertAll(objectsB);
+            await Connection.InsertAllAsync(objectsB);
 
             var objectA = new O2MClassA();
-            conn.Insert(objectA);
+            await Connection.InsertAsync(objectA);
 
             Assert.Null(objectA.BObjects);
 
@@ -380,40 +367,34 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
                 Assert.AreEqual(0, objectB.ClassAKey, "Foreign keys shouldn't have been updated yet");
             }
 
-            conn.UpdateWithChildren(objectA);
+            await Connection.UpdateWithChildrenAsync(objectA);
 
             foreach (var objectB in objectA.BObjects)
             {
                 Assert.AreEqual(objectA.Id, objectB.ClassAKey, "Foreign keys haven't been updated yet");
 
                 // Check database values
-                var newObjectB = conn.Get<O2MClassB>(objectB.Id);
+                var newObjectB = await Connection.GetAsync<O2MClassB>(objectB.Id);
                 Assert.AreEqual(objectA.Id, newObjectB.ClassAKey, "Database stored value is not correct");
             }
 
             // At this point the test is exactly the same as TestUpdateSetOneToManyList
             objectA.BObjects = new List<O2MClassB>(); // Reset the relationship
 
-            conn.UpdateWithChildren(objectA);
+            await Connection.UpdateWithChildrenAsync(objectA);
 
             foreach (var objectB in objectsB)
             {
                 // Check database values
-                var newObjectB = conn.Get<O2MClassB>(objectB.Id);
+                var newObjectB = await Connection.GetAsync<O2MClassB>(objectB.Id);
                 Assert.AreEqual(0, newObjectB.ClassAKey, "Database stored value is not correct");
             }
 
         }
 
         [Test]
-        public void TestUpdateUnsetOneToManyNullList()
+        public async Task TestUpdateUnsetOneToManyNullList()
         {
-            var conn = Utils.CreateConnection();
-            conn.DropTable<O2MClassA>();
-            conn.DropTable<O2MClassB>();
-            conn.CreateTable<O2MClassA>();
-            conn.CreateTable<O2MClassB>();
-
             // Use standard SQLite-Net API to create the objects
             var objectsB = new List<O2MClassB>
             {
@@ -430,10 +411,10 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
                     Foo = string.Format("4- Foo String {0}", new Random().Next(100))
                 }
             };
-            conn.InsertAll(objectsB);
+            await Connection.InsertAllAsync(objectsB);
 
             var objectA = new O2MClassA();
-            conn.Insert(objectA);
+            await Connection.InsertAsync(objectA);
 
             Assert.Null(objectA.BObjects);
 
@@ -444,40 +425,34 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
                 Assert.AreEqual(0, objectB.ClassAKey, "Foreign keys shouldn't have been updated yet");
             }
 
-            conn.UpdateWithChildren(objectA);
+            await Connection.UpdateWithChildrenAsync(objectA);
 
             foreach (var objectB in objectA.BObjects)
             {
                 Assert.AreEqual(objectA.Id, objectB.ClassAKey, "Foreign keys haven't been updated yet");
 
                 // Check database values
-                var newObjectB = conn.Get<O2MClassB>(objectB.Id);
+                var newObjectB = await Connection.GetAsync<O2MClassB>(objectB.Id);
                 Assert.AreEqual(objectA.Id, newObjectB.ClassAKey, "Database stored value is not correct");
             }
 
             // At this point the test is exactly the same as TestUpdateSetOneToManyList
             objectA.BObjects = null; // Reset the relationship
 
-            conn.UpdateWithChildren(objectA);
+            await Connection.UpdateWithChildrenAsync(objectA);
 
             foreach (var objectB in objectsB)
             {
                 // Check database values
-                var newObjectB = conn.Get<O2MClassB>(objectB.Id);
+                var newObjectB = await Connection.GetAsync<O2MClassB>(objectB.Id);
                 Assert.AreEqual(0, newObjectB.ClassAKey, "Database stored value is not correct");
             }
 
         }
 
         [Test]
-        public void TestUpdateSetOneToManyArray()
+        public async Task TestUpdateSetOneToManyArray()
         {
-            var conn = Utils.CreateConnection();
-            conn.DropTable<O2MClassE>();
-            conn.DropTable<O2MClassF>();
-            conn.CreateTable<O2MClassE>();
-            conn.CreateTable<O2MClassF>();
-
             // Use standard SQLite-Net API to create the objects
             var objectsF = new[]
             {
@@ -494,10 +469,10 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
                     Foo = string.Format("4- Foo String {0}", new Random().Next(100))
                 }
             };
-            conn.InsertAll(objectsF);
+            await Connection.InsertAllAsync(objectsF);
 
             var objectE = new O2MClassE();
-            conn.Insert(objectE);
+            await Connection.InsertAsync(objectE);
 
             Assert.Null(objectE.FObjects);
 
@@ -509,14 +484,14 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
             }
 
 
-            conn.UpdateWithChildren(objectE);
+            await Connection.UpdateWithChildrenAsync(objectE);
 
             foreach (var objectF in objectE.FObjects)
             {
                 Assert.AreEqual(objectE.Id, objectF.ClassEKey, "Foreign keys haven't been updated yet");
 
                 // Check database values
-                var newObjectF = conn.Get<O2MClassF>(objectF.Id);
+                var newObjectF = await Connection.GetAsync<O2MClassF>(objectF.Id);
                 Assert.AreEqual(objectE.Id, newObjectF.ClassEKey, "Database stored value is not correct");
             }
 
@@ -524,14 +499,8 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
 
 
         [Test]
-        public void TestUpdateSetOneToManyListWithInverse()
+        public async Task TestUpdateSetOneToManyListWithInverse()
         {
-            var conn = Utils.CreateConnection();
-            conn.DropTable<O2MClassC>();
-            conn.DropTable<O2MClassD>();
-            conn.CreateTable<O2MClassC>();
-            conn.CreateTable<O2MClassD>();
-
             // Use standard SQLite-Net API to create the objects
             var objectsD = new List<O2MClassD>
             {
@@ -548,10 +517,10 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
                     Foo = string.Format("4- Foo String {0}", new Random().Next(100))
                 }
             };
-            conn.InsertAll(objectsD);
+            await Connection.InsertAllAsync(objectsD);
 
             var objectC = new O2MClassC();
-            conn.Insert(objectC);
+            await Connection.InsertAsync(objectC);
 
             Assert.Null(objectC.DObjects);
 
@@ -563,7 +532,7 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
             }
 
 
-            conn.UpdateWithChildren(objectC);
+            await Connection.UpdateWithChildrenAsync(objectC);
 
             foreach (var objectD in objectC.DObjects)
             {
@@ -571,21 +540,15 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
                 Assert.AreSame(objectC, objectD.ObjectC, "Inverse relationship hasn't been set");
 
                 // Check database values
-                var newObjectD = conn.Get<O2MClassD>(objectD.Id);
+                var newObjectD = await Connection.GetAsync<O2MClassD>(objectD.Id);
                 Assert.AreEqual(objectC.Id, newObjectD.ClassCKey, "Database stored value is not correct");
             }
 
         }
 
         [Test]
-        public void TestGetOneToManyListWithInverseGuidId()
+        public async Task TestGetOneToManyListWithInverseGuidId()
         {
-            var conn = Utils.CreateConnection();
-            conn.DropTable<O2MClassG>();
-            conn.DropTable<O2MClassH>();
-            conn.CreateTable<O2MClassG>();
-            conn.CreateTable<O2MClassH>();
-
             // Use standard SQLite-Net API to create the objects
             var objectsD = new List<O2MClassH>
             {
@@ -606,15 +569,15 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
                     Foo = string.Format("4- Foo String {0}", new Random().Next(100))
                 }
             };
-            conn.InsertAll(objectsD);
+            await Connection.InsertAllAsync(objectsD);
 
             var objectC = new O2MClassG { Guid = Guid.NewGuid() };
-            conn.Insert(objectC);
+            await Connection.InsertAsync(objectC);
 
             Assert.Null(objectC.HObjects);
 
             // Fetch (yet empty) the relationship
-            conn.GetChildren(objectC);
+            await Connection.GetChildrenAsync(objectC);
             Assert.NotNull(objectC.HObjects);
             Assert.AreEqual(0, objectC.HObjects.Count);
 
@@ -622,14 +585,14 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
             foreach (var objectD in objectsD)
             {
                 objectD.ClassGKey = objectC.Guid;
-                conn.Update(objectD);
+                await Connection.UpdateAsync(objectD);
             }
 
             Assert.NotNull(objectC.HObjects);
             Assert.AreEqual(0, objectC.HObjects.Count);
 
             // Fetch the relationship
-            conn.GetChildren(objectC);
+            await Connection.GetChildrenAsync(objectC);
 
             Assert.NotNull(objectC.HObjects);
             Assert.AreEqual(objectsD.Count, objectC.HObjects.Count);
@@ -644,14 +607,8 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
         }
 
         [Test]
-        public void TestUpdateSetOneToManyListWithInverseGuidId()
+        public async Task TestUpdateSetOneToManyListWithInverseGuidId()
         {
-            var conn = Utils.CreateConnection();
-            conn.DropTable<O2MClassG>();
-            conn.DropTable<O2MClassH>();
-            conn.CreateTable<O2MClassG>();
-            conn.CreateTable<O2MClassH>();
-
             // Use standard SQLite-Net API to create the objects
             var objectsH = new List<O2MClassH>
             {
@@ -672,10 +629,10 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
                     Foo = string.Format("4- Foo String {0}", new Random().Next(100))
                 }
             };
-            conn.InsertAll(objectsH);
+            await Connection.InsertAllAsync(objectsH);
 
             var objectG = new O2MClassG { Guid = Guid.NewGuid() };
-            conn.Insert(objectG);
+            await Connection.InsertAsync(objectG);
 
             Assert.Null(objectG.HObjects);
 
@@ -687,7 +644,7 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
             }
 
 
-            conn.UpdateWithChildren(objectG);
+            await Connection.UpdateWithChildrenAsync(objectG);
 
             foreach (var objectH in objectG.HObjects)
             {
@@ -695,13 +652,13 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
                 Assert.AreSame(objectG, objectH.ObjectG, "Inverse relationship hasn't been set");
 
                 // Check database values
-                var newObjectH = conn.Get<O2MClassH>(objectH.Guid);
+                var newObjectH = await Connection.GetAsync<O2MClassH>(objectH.Guid);
                 Assert.AreEqual(objectG.Guid, newObjectH.ClassGKey, "Database stored value is not correct");
             }
 
         }
 
-        public class Employee
+        private class Employee
         {
             [PrimaryKey, AutoIncrement]
             public int Id { get; set; }
@@ -723,27 +680,23 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
         /// Issue #17: https://bitbucket.org/twincoders/sqlite-net-extensions/issue/17
         /// </summary>
         [Test]
-        [NUnit.Framework.Ignore("There's a problem here")]
-        public void TestRecursiveInverseRelationship()
+        [NUnit.Framework.Ignore("There's a bug here")]
+        public async Task TestRecursiveInverseRelationship()
         {
-            var conn = Utils.CreateConnection();
-            conn.DropTable<Employee>();
-            conn.CreateTable<Employee>();
-
             var employee1 = new Employee
             {
                 Name = "Albert"
             };
-            conn.Insert(employee1);
+            await Connection.InsertAsync(employee1);
 
             var employee2 = new Employee
             {
                 Name = "Leonardo",
                 SupervisorId = employee1.Id
             };
-            conn.Insert(employee2);
+            await Connection.InsertAsync(employee2);
 
-            var result = conn.GetWithChildren<Employee>(employee1.Id);
+            var result = await Connection.GetWithChildrenAsync<Employee>(employee1.Id);
             Assert.AreEqual(employee1, result);
             Assert.That(employee1.Subordinates.Select(e => e.Name), Contains.Item(employee2.Name));
         }

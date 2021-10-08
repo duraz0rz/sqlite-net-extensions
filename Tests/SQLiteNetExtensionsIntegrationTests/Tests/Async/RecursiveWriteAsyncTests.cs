@@ -3,138 +3,139 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using NUnit.Framework;
-using SQLiteNetExtensions.Attributes;
-using SQLiteNetExtensionsAsync.Extensions;
-
-#if USING_MVVMCROSS
-using SQLite.Net.Attributes;
-#else
 using SQLite;
-#endif
+using SQLiteNetExtensions.Attributes;
+using SQLiteNetExtensions.IntegrationTests;
+using SQLiteNetExtensionsAsync.Extensions;
+// ReSharper disable UnusedAutoPropertyAccessor.Global
+// ReSharper disable UnusedMember.Local
+// ReSharper disable UnusedAutoPropertyAccessor.Local
+// ReSharper disable PropertyCanBeMadeInitOnly.Global
+// ReSharper disable PropertyCanBeMadeInitOnly.Local
 
-namespace SQLiteNetExtensions.IntegrationTests.Tests
+namespace SQLiteNetExtensionsIntegrationTests.Tests.Async
 {
     [TestFixture]
     public class RecursiveWriteAsyncTests
     {
-#region OneToOneRecursiveInsertAsync
-        public class Person {
-            [PrimaryKey, AutoIncrement]
-            public int Identifier { get; set; }
+        public class PersonInt
+        {
+            [PrimaryKey] [AutoIncrement] public int Identifier { get; set; }
 
             public string Name { get; set; }
             public string Surname { get; set; }
 
             [OneToOne(CascadeOperations = CascadeOperation.CascadeInsert)]
-            public Passport Passport { get; set; }
+            public PassportInt PassportInt { get; set; }
         }
 
-        public class Passport {
-            [PrimaryKey, AutoIncrement]
-            public int Id { get; set; }
+        public class PassportInt
+        {
+            [PrimaryKey] [AutoIncrement] public int Id { get; set; }
 
             public string PassportNumber { get; set; }
 
-            [ForeignKey(typeof(Person))]
-            public int OwnerId { get; set; }
+            [ForeignKey(typeof(PersonInt))] public int OwnerId { get; set; }
 
-            [OneToOne(ReadOnly = true)]
-            public Person Owner { get; set; }
+            [OneToOne(ReadOnly = true)] public PersonInt Owner { get; set; }
         }
 
         [Test]
-        public async Task TestOneToOneRecursiveInsertAsync() {
+        public async Task TestOneToOneRecursiveInsertAsync()
+        {
             var conn = Utils.CreateAsyncConnection();
-            await conn.DropTableAsync<Passport>();
-            await conn.DropTableAsync<Person>();
-            await conn.CreateTableAsync<Passport>();
-            await conn.CreateTableAsync<Person>();
+            await conn.DropTableAsync<PassportInt>();
+            await conn.DropTableAsync<PersonInt>();
+            await conn.CreateTableAsync<PassportInt>();
+            await conn.CreateTableAsync<PersonInt>();
 
-            var person = new Person
+            var person = new PersonInt
             {
                 Name = "John",
                 Surname = "Smith",
-                Passport = new Passport {
+                PassportInt = new PassportInt
+                {
                     PassportNumber = "JS123456"
                 }
             };
 
             // Insert the elements in the database recursively
-            await conn.InsertWithChildrenAsync(person, recursive: true);
+            await conn.InsertWithChildrenAsync(person, true);
 
-            var obtainedPerson = await conn.FindAsync<Person>(person.Identifier);
-            var obtainedPassport = await conn.FindAsync<Passport>(person.Passport.Id);
+            var obtainedPerson = await conn.FindAsync<PersonInt>(person.Identifier);
+            var obtainedPassport = await conn.FindAsync<PassportInt>(person.PassportInt.Id);
 
             Assert.NotNull(obtainedPerson);
             Assert.NotNull(obtainedPassport);
             Assert.That(obtainedPerson.Name, Is.EqualTo(person.Name));
             Assert.That(obtainedPerson.Surname, Is.EqualTo(person.Surname));
-            Assert.That(obtainedPassport.PassportNumber, Is.EqualTo(person.Passport.PassportNumber));
+            Assert.That(obtainedPassport.PassportNumber, Is.EqualTo(person.PassportInt.PassportNumber));
             Assert.That(obtainedPassport.OwnerId, Is.EqualTo(person.Identifier));
         }
 
         [Test]
-        public async Task TestOneToOneRecursiveInsertOrReplaceAsync() {
+        public async Task TestOneToOneRecursiveInsertOrReplaceAsync()
+        {
             var conn = Utils.CreateAsyncConnection();
-            await conn.DropTableAsync<Passport>();
-            await conn.DropTableAsync<Person>();
-            await conn.CreateTableAsync<Passport>();
-            await conn.CreateTableAsync<Person>();
+            await conn.DropTableAsync<PassportInt>();
+            await conn.DropTableAsync<PersonInt>();
+            await conn.CreateTableAsync<PassportInt>();
+            await conn.CreateTableAsync<PersonInt>();
 
-            var person = new Person
+            var person = new PersonInt
             {
                 Name = "John",
                 Surname = "Smith",
-                Passport = new Passport {
+                PassportInt = new PassportInt
+                {
                     PassportNumber = "JS123456"
                 }
             };
 
             // Insert the elements in the database recursively
-            await conn.InsertOrReplaceWithChildrenAsync(person, recursive: true);
+            await conn.InsertOrReplaceWithChildrenAsync(person, true);
 
-            var obtainedPerson = await conn.FindAsync<Person>(person.Identifier);
-            var obtainedPassport = await conn.FindAsync<Passport>(person.Passport.Id);
+            var obtainedPerson = await conn.FindAsync<PersonInt>(person.Identifier);
+            var obtainedPassport = await conn.FindAsync<PassportInt>(person.PassportInt.Id);
 
             Assert.NotNull(obtainedPerson);
             Assert.NotNull(obtainedPassport);
             Assert.That(obtainedPerson.Name, Is.EqualTo(person.Name));
             Assert.That(obtainedPerson.Surname, Is.EqualTo(person.Surname));
-            Assert.That(obtainedPassport.PassportNumber, Is.EqualTo(person.Passport.PassportNumber));
+            Assert.That(obtainedPassport.PassportNumber, Is.EqualTo(person.PassportInt.PassportNumber));
             Assert.That(obtainedPassport.OwnerId, Is.EqualTo(person.Identifier));
 
 
-            var newPerson = new Person
+            var newPerson = new PersonInt
             {
                 Identifier = person.Identifier,
                 Name = "John",
                 Surname = "Smith",
-                Passport = new Passport {
-                    Id = person.Passport.Id,
+                PassportInt = new PassportInt
+                {
+                    Id = person.PassportInt.Id,
                     PassportNumber = "JS123456"
                 }
             };
             person = newPerson;
 
             // Replace the elements in the database recursively
-            await conn.InsertOrReplaceWithChildrenAsync(person, recursive: true);
+            await conn.InsertOrReplaceWithChildrenAsync(person, true);
 
-            obtainedPerson = await conn.FindAsync<Person>(person.Identifier);
-            obtainedPassport = await conn.FindAsync<Passport>(person.Passport.Id);
+            obtainedPerson = await conn.FindAsync<PersonInt>(person.Identifier);
+            obtainedPassport = await conn.FindAsync<PassportInt>(person.PassportInt.Id);
 
             Assert.NotNull(obtainedPerson);
             Assert.NotNull(obtainedPassport);
             Assert.That(obtainedPerson.Name, Is.EqualTo(person.Name));
             Assert.That(obtainedPerson.Surname, Is.EqualTo(person.Surname));
-            Assert.That(obtainedPassport.PassportNumber, Is.EqualTo(person.Passport.PassportNumber));
+            Assert.That(obtainedPassport.PassportNumber, Is.EqualTo(person.PassportInt.PassportNumber));
             Assert.That(obtainedPassport.OwnerId, Is.EqualTo(person.Identifier));
         }
-#endregion
 
-#region OneToOneRecursiveInsertGuidAsync
-        public class PersonGuid {
-            [PrimaryKey]
-            public Guid Identifier { get; set; }
+        public class PersonGuid
+        {
+            [PrimaryKey] public Guid Identifier { get; set; }
 
             public string Name { get; set; }
             public string Surname { get; set; }
@@ -143,21 +144,20 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
             public PassportGuid Passport { get; set; }
         }
 
-        public class PassportGuid {
-            [PrimaryKey]
-            public Guid Id { get; set; }
+        public class PassportGuid
+        {
+            [PrimaryKey] public Guid Id { get; set; }
 
             public string PassportNumber { get; set; }
 
-            [ForeignKey(typeof(PersonGuid))]
-            public Guid OwnerId { get; set; }
+            [ForeignKey(typeof(PersonGuid))] public Guid OwnerId { get; set; }
 
-            [OneToOne(ReadOnly = true)]
-            public PersonGuid Owner { get; set; }
+            [OneToOne(ReadOnly = true)] public PersonGuid Owner { get; set; }
         }
 
         [Test]
-        public async Task TestOneToOneRecursiveInsertGuidAsync() {
+        public async Task TestOneToOneRecursiveInsertGuidAsync()
+        {
             var conn = Utils.CreateAsyncConnection();
             await conn.DropTableAsync<PassportGuid>();
             await conn.DropTableAsync<PersonGuid>();
@@ -169,14 +169,15 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
                 Identifier = Guid.NewGuid(),
                 Name = "John",
                 Surname = "Smith",
-                Passport = new PassportGuid {
+                Passport = new PassportGuid
+                {
                     Id = Guid.NewGuid(),
                     PassportNumber = "JS123456"
                 }
             };
 
             // Insert the elements in the database recursively
-            await conn.InsertWithChildrenAsync(person, recursive: true);
+            await conn.InsertWithChildrenAsync(person, true);
 
             var obtainedPerson = await conn.FindAsync<PersonGuid>(person.Identifier);
             var obtainedPassport = await conn.FindAsync<PassportGuid>(person.Passport.Id);
@@ -190,7 +191,8 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
         }
 
         [Test]
-        public async Task TestOneToOneRecursiveInsertOrReplaceGuidAsync() {
+        public async Task TestOneToOneRecursiveInsertOrReplaceGuidAsync()
+        {
             var conn = Utils.CreateAsyncConnection();
             await conn.DropTableAsync<PassportGuid>();
             await conn.DropTableAsync<PersonGuid>();
@@ -202,14 +204,15 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
                 Identifier = Guid.NewGuid(),
                 Name = "John",
                 Surname = "Smith",
-                Passport = new PassportGuid {
+                Passport = new PassportGuid
+                {
                     Id = Guid.NewGuid(),
                     PassportNumber = "JS123456"
                 }
             };
 
             // Insert the elements in the database recursively
-            await conn.InsertOrReplaceWithChildrenAsync(person, recursive: true);
+            await conn.InsertOrReplaceWithChildrenAsync(person, true);
 
             var obtainedPerson = await conn.FindAsync<PersonGuid>(person.Identifier);
             var obtainedPassport = await conn.FindAsync<PassportGuid>(person.Passport.Id);
@@ -227,7 +230,8 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
                 Identifier = person.Identifier,
                 Name = "John",
                 Surname = "Smith",
-                Passport = new PassportGuid {
+                Passport = new PassportGuid
+                {
                     Id = person.Passport.Id,
                     PassportNumber = "JS123456"
                 }
@@ -235,7 +239,7 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
             person = newPerson;
 
             // Replace the elements in the database recursively
-            await conn.InsertOrReplaceWithChildrenAsync(person, recursive: true);
+            await conn.InsertOrReplaceWithChildrenAsync(person, true);
 
             obtainedPerson = await conn.FindAsync<PersonGuid>(person.Identifier);
             obtainedPassport = await conn.FindAsync<PassportGuid>(person.Passport.Id);
@@ -247,60 +251,58 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
             Assert.That(obtainedPassport.PassportNumber, Is.EqualTo(person.Passport.PassportNumber));
             Assert.That(obtainedPassport.OwnerId, Is.EqualTo(person.Identifier));
         }
-#endregion
 
-#region OneToManyRecursiveInsertAsync
-        public class Customer {
-            [PrimaryKey, AutoIncrement]
-            public int Id { get; set; }
+        public class CustomerInt
+        {
+            [PrimaryKey] [AutoIncrement] public int Id { get; set; }
 
             public string Name { get; set; }
 
             [OneToMany(CascadeOperations = CascadeOperation.CascadeInsert)]
-            public Order[] Orders { get; set; }
+            public OrderInt[] Orders { get; set; }
         }
 
         [Table("Orders")] // 'Order' is a reserved keyword
-        public class Order {
-            [PrimaryKey, AutoIncrement]
-            public int Id { get; set; }
+        public class OrderInt
+        {
+            [PrimaryKey] [AutoIncrement] public int Id { get; set; }
 
             public float Amount { get; set; }
             public DateTime Date { get; set; }
 
-            [ForeignKey(typeof(Customer))]
-            public int CustomerId { get; set; }
+            [ForeignKey(typeof(CustomerInt))] public int CustomerId { get; set; }
 
             [ManyToOne(CascadeOperations = CascadeOperation.CascadeInsert)]
-            public Customer Customer { get; set; }
+            public CustomerInt CustomerInt { get; set; }
         }
 
         [Test]
-        public async Task TestOneToManyRecursiveInsertAsync() {
+        public async Task TestOneToManyRecursiveInsertAsync()
+        {
             var conn = Utils.CreateAsyncConnection();
-            await conn.DropTableAsync<Customer>();
-            await conn.DropTableAsync<Order>();
-            await conn.CreateTableAsync<Customer>();
-            await conn.CreateTableAsync<Order>();
+            await conn.DropTableAsync<CustomerInt>();
+            await conn.DropTableAsync<OrderInt>();
+            await conn.CreateTableAsync<CustomerInt>();
+            await conn.CreateTableAsync<OrderInt>();
 
-            var customer = new Customer
+            var customer = new CustomerInt
             {
                 Name = "John Smith",
-                Orders = new []
+                Orders = new[]
                 {
-                    new Order { Amount = 25.7f, Date = new DateTime(2014, 5, 15, 11, 30, 15) },
-                    new Order { Amount = 15.2f, Date = new DateTime(2014, 3, 7, 13, 59, 1) },
-                    new Order { Amount = 0.5f, Date = new DateTime(2014, 4, 5, 7, 3, 0) },
-                    new Order { Amount = 106.6f, Date = new DateTime(2014, 7, 20, 21, 20, 24) },
-                    new Order { Amount = 98f, Date = new DateTime(2014, 02, 1, 22, 31, 7) }
+                    new OrderInt { Amount = 25.7f, Date = new DateTime(2014, 5, 15, 11, 30, 15) },
+                    new OrderInt { Amount = 15.2f, Date = new DateTime(2014, 3, 7, 13, 59, 1) },
+                    new OrderInt { Amount = 0.5f, Date = new DateTime(2014, 4, 5, 7, 3, 0) },
+                    new OrderInt { Amount = 106.6f, Date = new DateTime(2014, 7, 20, 21, 20, 24) },
+                    new OrderInt { Amount = 98f, Date = new DateTime(2014, 02, 1, 22, 31, 7) }
                 }
             };
 
-            await conn.InsertWithChildrenAsync(customer, recursive: true);
+            await conn.InsertWithChildrenAsync(customer, true);
 
             var expectedOrders = customer.Orders.OrderBy(o => o.Date).ToDictionary(o => o.Id);
 
-            var obtainedCustomer = await conn.GetWithChildrenAsync<Customer>(customer.Id, recursive: true);
+            var obtainedCustomer = await conn.GetWithChildrenAsync<CustomerInt>(customer.Id, true);
             Assert.NotNull(obtainedCustomer);
             Assert.NotNull(obtainedCustomer.Orders);
             Assert.AreEqual(expectedOrders.Count, obtainedCustomer.Orders.Length);
@@ -310,33 +312,34 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
                 var expectedOrder = expectedOrders[order.Id];
                 Assert.AreEqual(expectedOrder.Amount, order.Amount, 0.0001);
                 Assert.AreEqual(expectedOrder.Date, order.Date);
-                Assert.NotNull(order.Customer);
+                Assert.NotNull(order.CustomerInt);
                 Assert.AreEqual(customer.Id, order.CustomerId);
-                Assert.AreEqual(customer.Id, order.Customer.Id);
-                Assert.AreEqual(customer.Name, order.Customer.Name);
-                Assert.NotNull(order.Customer.Orders);
-                Assert.AreEqual(expectedOrders.Count, order.Customer.Orders.Length);
+                Assert.AreEqual(customer.Id, order.CustomerInt.Id);
+                Assert.AreEqual(customer.Name, order.CustomerInt.Name);
+                Assert.NotNull(order.CustomerInt.Orders);
+                Assert.AreEqual(expectedOrders.Count, order.CustomerInt.Orders.Length);
             }
         }
 
         [Test]
-        public async Task TestOneToManyRecursiveInsertOrReplaceAsync() {
+        public async Task TestOneToManyRecursiveInsertOrReplaceAsync()
+        {
             var conn = Utils.CreateAsyncConnection();
-            await conn.DropTableAsync<Customer>();
-            await conn.DropTableAsync<Order>();
-            await conn.CreateTableAsync<Customer>();
-            await conn.CreateTableAsync<Order>();
+            await conn.DropTableAsync<CustomerInt>();
+            await conn.DropTableAsync<OrderInt>();
+            await conn.CreateTableAsync<CustomerInt>();
+            await conn.CreateTableAsync<OrderInt>();
 
-            var customer = new Customer
+            var customer = new CustomerInt
             {
                 Name = "John Smith",
-                Orders = new []
+                Orders = new[]
                 {
-                    new Order { Amount = 25.7f, Date = new DateTime(2014, 5, 15, 11, 30, 15) },
-                    new Order { Amount = 15.2f, Date = new DateTime(2014, 3, 7, 13, 59, 1) },
-                    new Order { Amount = 0.5f, Date = new DateTime(2014, 4, 5, 7, 3, 0) },
-                    new Order { Amount = 106.6f, Date = new DateTime(2014, 7, 20, 21, 20, 24) },
-                    new Order { Amount = 98f, Date = new DateTime(2014, 02, 1, 22, 31, 7) }
+                    new OrderInt { Amount = 25.7f, Date = new DateTime(2014, 5, 15, 11, 30, 15) },
+                    new OrderInt { Amount = 15.2f, Date = new DateTime(2014, 3, 7, 13, 59, 1) },
+                    new OrderInt { Amount = 0.5f, Date = new DateTime(2014, 4, 5, 7, 3, 0) },
+                    new OrderInt { Amount = 106.6f, Date = new DateTime(2014, 7, 20, 21, 20, 24) },
+                    new OrderInt { Amount = 98f, Date = new DateTime(2014, 02, 1, 22, 31, 7) }
                 }
             };
 
@@ -344,7 +347,7 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
 
             var expectedOrders = customer.Orders.OrderBy(o => o.Date).ToDictionary(o => o.Id);
 
-            var obtainedCustomer = await conn.GetWithChildrenAsync<Customer>(customer.Id, recursive: true);
+            var obtainedCustomer = await conn.GetWithChildrenAsync<CustomerInt>(customer.Id, true);
             Assert.NotNull(obtainedCustomer);
             Assert.NotNull(obtainedCustomer.Orders);
             Assert.AreEqual(expectedOrders.Count, obtainedCustomer.Orders.Length);
@@ -354,35 +357,41 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
                 var expectedOrder = expectedOrders[order.Id];
                 Assert.AreEqual(expectedOrder.Amount, order.Amount, 0.0001);
                 Assert.AreEqual(expectedOrder.Date, order.Date);
-                Assert.NotNull(order.Customer);
+                Assert.NotNull(order.CustomerInt);
                 Assert.AreEqual(customer.Id, order.CustomerId);
-                Assert.AreEqual(customer.Id, order.Customer.Id);
-                Assert.AreEqual(customer.Name, order.Customer.Name);
-                Assert.NotNull(order.Customer.Orders);
-                Assert.AreEqual(expectedOrders.Count, order.Customer.Orders.Length);
+                Assert.AreEqual(customer.Id, order.CustomerInt.Id);
+                Assert.AreEqual(customer.Name, order.CustomerInt.Name);
+                Assert.NotNull(order.CustomerInt.Orders);
+                Assert.AreEqual(expectedOrders.Count, order.CustomerInt.Orders.Length);
             }
 
-            var newCustomer = new Customer
+            var newCustomer = new CustomerInt
             {
                 Id = customer.Id,
                 Name = "John Smith",
-                Orders = new []
+                Orders = new[]
                 {
-                    new Order { Id = customer.Orders[0].Id, Amount = 15.7f, Date = new DateTime(2012, 5, 15, 11, 30, 15) },
-                    new Order { Id = customer.Orders[2].Id, Amount = 55.2f, Date = new DateTime(2012, 3, 7, 13, 59, 1) },
-                    new Order { Id = customer.Orders[4].Id, Amount = 4.5f, Date = new DateTime(2012, 4, 5, 7, 3, 0) },
-                    new Order { Amount = 206.6f, Date = new DateTime(2012, 7, 20, 21, 20, 24) },
-                    new Order { Amount = 78f, Date = new DateTime(2012, 02, 1, 22, 31, 7) }
+                    new OrderInt
+                    {
+                        Id = customer.Orders[0].Id, Amount = 15.7f, Date = new DateTime(2012, 5, 15, 11, 30, 15)
+                    },
+                    new OrderInt
+                    {
+                        Id = customer.Orders[2].Id, Amount = 55.2f, Date = new DateTime(2012, 3, 7, 13, 59, 1)
+                    },
+                    new OrderInt { Id = customer.Orders[4].Id, Amount = 4.5f, Date = new DateTime(2012, 4, 5, 7, 3, 0) },
+                    new OrderInt { Amount = 206.6f, Date = new DateTime(2012, 7, 20, 21, 20, 24) },
+                    new OrderInt { Amount = 78f, Date = new DateTime(2012, 02, 1, 22, 31, 7) }
                 }
             };
 
             customer = newCustomer;
 
-            await conn.InsertOrReplaceWithChildrenAsync(customer, recursive: true);
+            await conn.InsertOrReplaceWithChildrenAsync(customer, true);
 
             expectedOrders = customer.Orders.OrderBy(o => o.Date).ToDictionary(o => o.Id);
 
-            obtainedCustomer = await conn.GetWithChildrenAsync<Customer>(customer.Id, recursive: true);
+            obtainedCustomer = await conn.GetWithChildrenAsync<CustomerInt>(customer.Id, true);
             Assert.NotNull(obtainedCustomer);
             Assert.NotNull(obtainedCustomer.Orders);
             Assert.AreEqual(expectedOrders.Count, obtainedCustomer.Orders.Length);
@@ -392,20 +401,18 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
                 var expectedOrder = expectedOrders[order.Id];
                 Assert.AreEqual(expectedOrder.Amount, order.Amount, 0.0001);
                 Assert.AreEqual(expectedOrder.Date, order.Date);
-                Assert.NotNull(order.Customer);
+                Assert.NotNull(order.CustomerInt);
                 Assert.AreEqual(customer.Id, order.CustomerId);
-                Assert.AreEqual(customer.Id, order.Customer.Id);
-                Assert.AreEqual(customer.Name, order.Customer.Name);
-                Assert.NotNull(order.Customer.Orders);
-                Assert.AreEqual(expectedOrders.Count, order.Customer.Orders.Length);
+                Assert.AreEqual(customer.Id, order.CustomerInt.Id);
+                Assert.AreEqual(customer.Name, order.CustomerInt.Name);
+                Assert.NotNull(order.CustomerInt.Orders);
+                Assert.AreEqual(expectedOrders.Count, order.CustomerInt.Orders.Length);
             }
         }
-#endregion
 
-#region OneToManyRecursiveInsertGuidAsync
-        public class CustomerGuid {
-            [PrimaryKey]
-            public Guid Id { get; set; }
+        public class CustomerGuid
+        {
+            [PrimaryKey] public Guid Id { get; set; }
 
             public string Name { get; set; }
 
@@ -414,22 +421,22 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
         }
 
         [Table("Orders")] // 'Order' is a reserved keyword
-        public class OrderGuid {
-            [PrimaryKey]
-            public Guid Id { get; set; }
+        public class OrderGuid
+        {
+            [PrimaryKey] public Guid Id { get; set; }
 
             public float Amount { get; set; }
             public DateTime Date { get; set; }
 
-            [ForeignKey(typeof(CustomerGuid))]
-            public Guid CustomerId { get; set; }
+            [ForeignKey(typeof(CustomerGuid))] public Guid CustomerId { get; set; }
 
             [ManyToOne(CascadeOperations = CascadeOperation.CascadeInsert)]
             public CustomerGuid Customer { get; set; }
         }
 
         [Test]
-        public async Task TestOneToManyRecursiveInsertGuidAsync() {
+        public async Task TestOneToManyRecursiveInsertGuidAsync()
+        {
             var conn = Utils.CreateAsyncConnection();
             await conn.DropTableAsync<CustomerGuid>();
             await conn.DropTableAsync<OrderGuid>();
@@ -440,21 +447,22 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
             {
                 Id = Guid.NewGuid(),
                 Name = "John Smith",
-                Orders = new []
+                Orders = new[]
                 {
                     new OrderGuid { Id = Guid.NewGuid(), Amount = 25.7f, Date = new DateTime(2014, 5, 15, 11, 30, 15) },
                     new OrderGuid { Id = Guid.NewGuid(), Amount = 15.2f, Date = new DateTime(2014, 3, 7, 13, 59, 1) },
                     new OrderGuid { Id = Guid.NewGuid(), Amount = 0.5f, Date = new DateTime(2014, 4, 5, 7, 3, 0) },
-                    new OrderGuid { Id = Guid.NewGuid(), Amount = 106.6f, Date = new DateTime(2014, 7, 20, 21, 20, 24) },
+                    new OrderGuid
+                        { Id = Guid.NewGuid(), Amount = 106.6f, Date = new DateTime(2014, 7, 20, 21, 20, 24) },
                     new OrderGuid { Id = Guid.NewGuid(), Amount = 98f, Date = new DateTime(2014, 02, 1, 22, 31, 7) }
                 }
             };
 
-            await conn.InsertWithChildrenAsync(customer, recursive: true);
+            await conn.InsertWithChildrenAsync(customer, true);
 
             var expectedOrders = customer.Orders.OrderBy(o => o.Date).ToDictionary(o => o.Id);
 
-            var obtainedCustomer = await conn.GetWithChildrenAsync<CustomerGuid>(customer.Id, recursive: true);
+            var obtainedCustomer = await conn.GetWithChildrenAsync<CustomerGuid>(customer.Id, true);
             Assert.NotNull(obtainedCustomer);
             Assert.NotNull(obtainedCustomer.Orders);
             Assert.AreEqual(expectedOrders.Count, obtainedCustomer.Orders.Length);
@@ -474,7 +482,8 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
         }
 
         [Test]
-        public async Task TestOneToManyRecursiveInsertOrReplaceGuidAsync() {
+        public async Task TestOneToManyRecursiveInsertOrReplaceGuidAsync()
+        {
             var conn = Utils.CreateAsyncConnection();
             await conn.DropTableAsync<CustomerGuid>();
             await conn.DropTableAsync<OrderGuid>();
@@ -485,21 +494,22 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
             {
                 Id = Guid.NewGuid(),
                 Name = "John Smith",
-                Orders = new []
+                Orders = new[]
                 {
                     new OrderGuid { Id = Guid.NewGuid(), Amount = 25.7f, Date = new DateTime(2014, 5, 15, 11, 30, 15) },
                     new OrderGuid { Id = Guid.NewGuid(), Amount = 15.2f, Date = new DateTime(2014, 3, 7, 13, 59, 1) },
                     new OrderGuid { Id = Guid.NewGuid(), Amount = 0.5f, Date = new DateTime(2014, 4, 5, 7, 3, 0) },
-                    new OrderGuid { Id = Guid.NewGuid(), Amount = 106.6f, Date = new DateTime(2014, 7, 20, 21, 20, 24) },
+                    new OrderGuid
+                        { Id = Guid.NewGuid(), Amount = 106.6f, Date = new DateTime(2014, 7, 20, 21, 20, 24) },
                     new OrderGuid { Id = Guid.NewGuid(), Amount = 98f, Date = new DateTime(2014, 02, 1, 22, 31, 7) }
                 }
             };
 
-            await conn.InsertOrReplaceWithChildrenAsync(customer, recursive: true);
+            await conn.InsertOrReplaceWithChildrenAsync(customer, true);
 
             var expectedOrders = customer.Orders.OrderBy(o => o.Date).ToDictionary(o => o.Id);
 
-            var obtainedCustomer = await conn.GetWithChildrenAsync<CustomerGuid>(customer.Id, recursive: true);
+            var obtainedCustomer = await conn.GetWithChildrenAsync<CustomerGuid>(customer.Id, true);
             Assert.NotNull(obtainedCustomer);
             Assert.NotNull(obtainedCustomer.Orders);
             Assert.AreEqual(expectedOrders.Count, obtainedCustomer.Orders.Length);
@@ -521,75 +531,27 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
             {
                 Id = customer.Id,
                 Name = "John Smith",
-                Orders = new []
+                Orders = new[]
                 {
-                    new OrderGuid { Id = customer.Orders[0].Id, Amount = 15.7f, Date = new DateTime(2012, 5, 15, 11, 30, 15) },
-                    new OrderGuid { Id = customer.Orders[2].Id, Amount = 55.2f, Date = new DateTime(2012, 3, 7, 13, 59, 1) },
-                    new OrderGuid { Id = customer.Orders[4].Id, Amount = 4.5f, Date = new DateTime(2012, 4, 5, 7, 3, 0) },
-                    new OrderGuid { Id = Guid.NewGuid(), Amount = 206.6f, Date = new DateTime(2012, 7, 20, 21, 20, 24) },
+                    new OrderGuid
+                        { Id = customer.Orders[0].Id, Amount = 15.7f, Date = new DateTime(2012, 5, 15, 11, 30, 15) },
+                    new OrderGuid
+                        { Id = customer.Orders[2].Id, Amount = 55.2f, Date = new DateTime(2012, 3, 7, 13, 59, 1) },
+                    new OrderGuid
+                        { Id = customer.Orders[4].Id, Amount = 4.5f, Date = new DateTime(2012, 4, 5, 7, 3, 0) },
+                    new OrderGuid
+                        { Id = Guid.NewGuid(), Amount = 206.6f, Date = new DateTime(2012, 7, 20, 21, 20, 24) },
                     new OrderGuid { Id = Guid.NewGuid(), Amount = 78f, Date = new DateTime(2012, 02, 1, 22, 31, 7) }
                 }
             };
 
             customer = newCustomer;
 
-            await conn.InsertOrReplaceWithChildrenAsync(customer, recursive: true);
+            await conn.InsertOrReplaceWithChildrenAsync(customer, true);
 
             expectedOrders = customer.Orders.OrderBy(o => o.Date).ToDictionary(o => o.Id);
 
-            obtainedCustomer = await conn.GetWithChildrenAsync<CustomerGuid>(customer.Id, recursive: true);
-            Assert.NotNull(obtainedCustomer);
-            Assert.NotNull(obtainedCustomer.Orders);
-            Assert.AreEqual(expectedOrders.Count, obtainedCustomer.Orders.Length);
-
-            foreach (var order in obtainedCustomer.Orders)
-            {
-                var expectedOrder = expectedOrders[order.Id];
-                Assert.AreEqual(expectedOrder.Amount, order.Amount, 0.0001);
-                Assert.AreEqual(expectedOrder.Date, order.Date);
-                Assert.NotNull(order.Customer);
-                Assert.AreEqual(customer.Id, order.CustomerId);
-                Assert.AreEqual(customer.Id, order.Customer.Id);
-                Assert.AreEqual(customer.Name, order.Customer.Name);
-                Assert.NotNull(order.Customer.Orders);
-                Assert.AreEqual(expectedOrders.Count, order.Customer.Orders.Length);
-            }
-        }
-#endregion
-
-#region ManyToOneRecursiveInsertAsync
-        /// <summary>
-        /// This test will validate the same scenario than TestOneToManyRecursiveInsert but inserting
-        /// one of the orders instead of the customer
-        /// </summary>
-        [Test]
-        public async Task TestManyToOneRecursiveInsertAsync() {
-            var conn = Utils.CreateAsyncConnection();
-            await conn.DropTableAsync<Customer>();
-            await conn.DropTableAsync<Order>();
-            await conn.CreateTableAsync<Customer>();
-            await conn.CreateTableAsync<Order>();
-
-            var customer = new Customer
-            {
-                Name = "John Smith",
-                Orders = new []
-                {
-                    new Order { Amount = 25.7f, Date = new DateTime(2014, 5, 15, 11, 30, 15) },
-                    new Order { Amount = 15.2f, Date = new DateTime(2014, 3, 7, 13, 59, 1) },
-                    new Order { Amount = 0.5f, Date = new DateTime(2014, 4, 5, 7, 3, 0) },
-                    new Order { Amount = 106.6f, Date = new DateTime(2014, 7, 20, 21, 20, 24) },
-                    new Order { Amount = 98f, Date = new DateTime(2014, 02, 1, 22, 31, 7) }
-                }
-            };
-
-            // Insert any of the orders instead of the customer
-            customer.Orders[0].Customer = customer;
-            await conn.InsertWithChildrenAsync(customer.Orders[0], recursive: true);
-
-            var expectedOrders = customer.Orders.OrderBy(o => o.Date).ToDictionary(o => o.Id);
-
-            var obtainedCustomer = await conn.GetWithChildrenAsync<Customer>(customer.Id, recursive: true);
+            obtainedCustomer = await conn.GetWithChildrenAsync<CustomerGuid>(customer.Id, true);
             Assert.NotNull(obtainedCustomer);
             Assert.NotNull(obtainedCustomer.Orders);
             Assert.AreEqual(expectedOrders.Count, obtainedCustomer.Orders.Length);
@@ -609,37 +571,38 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
         }
 
         /// <summary>
-        /// This test will validate the same scenario than TestOneToManyRecursiveInsertOrReplace but inserting
-        /// one of the orders instead of the customer
+        ///     This test will validate the same scenario than TestOneToManyRecursiveInsert but inserting
+        ///     one of the orders instead of the customer
         /// </summary>
         [Test]
-        public async Task TestManyToOneRecursiveInsertOrReplaceAsync() {
+        public async Task TestManyToOneRecursiveInsertAsync()
+        {
             var conn = Utils.CreateAsyncConnection();
-            await conn.DropTableAsync<Customer>();
-            await conn.DropTableAsync<Order>();
-            await conn.CreateTableAsync<Customer>();
-            await conn.CreateTableAsync<Order>();
+            await conn.DropTableAsync<CustomerInt>();
+            await conn.DropTableAsync<OrderInt>();
+            await conn.CreateTableAsync<CustomerInt>();
+            await conn.CreateTableAsync<OrderInt>();
 
-            var customer = new Customer
+            var customer = new CustomerInt
             {
                 Name = "John Smith",
-                Orders = new []
+                Orders = new[]
                 {
-                    new Order { Amount = 25.7f, Date = new DateTime(2014, 5, 15, 11, 30, 15) },
-                    new Order { Amount = 15.2f, Date = new DateTime(2014, 3, 7, 13, 59, 1) },
-                    new Order { Amount = 0.5f, Date = new DateTime(2014, 4, 5, 7, 3, 0) },
-                    new Order { Amount = 106.6f, Date = new DateTime(2014, 7, 20, 21, 20, 24) },
-                    new Order { Amount = 98f, Date = new DateTime(2014, 02, 1, 22, 31, 7) }
+                    new OrderInt { Amount = 25.7f, Date = new DateTime(2014, 5, 15, 11, 30, 15) },
+                    new OrderInt { Amount = 15.2f, Date = new DateTime(2014, 3, 7, 13, 59, 1) },
+                    new OrderInt { Amount = 0.5f, Date = new DateTime(2014, 4, 5, 7, 3, 0) },
+                    new OrderInt { Amount = 106.6f, Date = new DateTime(2014, 7, 20, 21, 20, 24) },
+                    new OrderInt { Amount = 98f, Date = new DateTime(2014, 02, 1, 22, 31, 7) }
                 }
             };
 
             // Insert any of the orders instead of the customer
-            customer.Orders[0].Customer = customer;
-            await conn.InsertOrReplaceWithChildrenAsync(customer.Orders[0], recursive: true);
+            customer.Orders[0].CustomerInt = customer;
+            await conn.InsertWithChildrenAsync(customer.Orders[0], true);
 
             var expectedOrders = customer.Orders.OrderBy(o => o.Date).ToDictionary(o => o.Id);
 
-            var obtainedCustomer = await conn.GetWithChildrenAsync<Customer>(customer.Id, recursive: true);
+            var obtainedCustomer = await conn.GetWithChildrenAsync<CustomerInt>(customer.Id, true);
             Assert.NotNull(obtainedCustomer);
             Assert.NotNull(obtainedCustomer.Orders);
             Assert.AreEqual(expectedOrders.Count, obtainedCustomer.Orders.Length);
@@ -649,37 +612,147 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
                 var expectedOrder = expectedOrders[order.Id];
                 Assert.AreEqual(expectedOrder.Amount, order.Amount, 0.0001);
                 Assert.AreEqual(expectedOrder.Date, order.Date);
-                Assert.NotNull(order.Customer);
+                Assert.NotNull(order.CustomerInt);
                 Assert.AreEqual(customer.Id, order.CustomerId);
-                Assert.AreEqual(customer.Id, order.Customer.Id);
-                Assert.AreEqual(customer.Name, order.Customer.Name);
-                Assert.NotNull(order.Customer.Orders);
-                Assert.AreEqual(expectedOrders.Count, order.Customer.Orders.Length);
+                Assert.AreEqual(customer.Id, order.CustomerInt.Id);
+                Assert.AreEqual(customer.Name, order.CustomerInt.Name);
+                Assert.NotNull(order.CustomerInt.Orders);
+                Assert.AreEqual(expectedOrders.Count, order.CustomerInt.Orders.Length);
+            }
+        }
+
+        /// <summary>
+        ///     This test will validate the same scenario than TestOneToManyRecursiveInsertOrReplace but inserting
+        ///     one of the orders instead of the customer
+        /// </summary>
+        [Test]
+        public async Task TestManyToOneRecursiveInsertOrReplaceAsync()
+        {
+            var conn = Utils.CreateAsyncConnection();
+            await conn.DropTableAsync<CustomerInt>();
+            await conn.DropTableAsync<OrderInt>();
+            await conn.CreateTableAsync<CustomerInt>();
+            await conn.CreateTableAsync<OrderInt>();
+
+            var customer = new CustomerInt
+            {
+                Name = "John Smith",
+                Orders = new[]
+                {
+                    new OrderInt { Amount = 25.7f, Date = new DateTime(2014, 5, 15, 11, 30, 15) },
+                    new OrderInt { Amount = 15.2f, Date = new DateTime(2014, 3, 7, 13, 59, 1) },
+                    new OrderInt { Amount = 0.5f, Date = new DateTime(2014, 4, 5, 7, 3, 0) },
+                    new OrderInt { Amount = 106.6f, Date = new DateTime(2014, 7, 20, 21, 20, 24) },
+                    new OrderInt { Amount = 98f, Date = new DateTime(2014, 02, 1, 22, 31, 7) }
+                }
+            };
+
+            // Insert any of the orders instead of the customer
+            customer.Orders[0].CustomerInt = customer;
+            await conn.InsertOrReplaceWithChildrenAsync(customer.Orders[0], true);
+
+            var expectedOrders = customer.Orders.OrderBy(o => o.Date).ToDictionary(o => o.Id);
+
+            var obtainedCustomer = await conn.GetWithChildrenAsync<CustomerInt>(customer.Id, true);
+            Assert.NotNull(obtainedCustomer);
+            Assert.NotNull(obtainedCustomer.Orders);
+            Assert.AreEqual(expectedOrders.Count, obtainedCustomer.Orders.Length);
+
+            foreach (var order in obtainedCustomer.Orders)
+            {
+                var expectedOrder = expectedOrders[order.Id];
+                Assert.AreEqual(expectedOrder.Amount, order.Amount, 0.0001);
+                Assert.AreEqual(expectedOrder.Date, order.Date);
+                Assert.NotNull(order.CustomerInt);
+                Assert.AreEqual(customer.Id, order.CustomerId);
+                Assert.AreEqual(customer.Id, order.CustomerInt.Id);
+                Assert.AreEqual(customer.Name, order.CustomerInt.Name);
+                Assert.NotNull(order.CustomerInt.Orders);
+                Assert.AreEqual(expectedOrders.Count, order.CustomerInt.Orders.Length);
             }
 
-            var newCustomer = new Customer
+            var newCustomer = new CustomerInt
             {
                 Id = customer.Id,
                 Name = "John Smith",
-                Orders = new []
+                Orders = new[]
                 {
-                    new Order { Id = customer.Orders[0].Id, Amount = 15.7f, Date = new DateTime(2012, 5, 15, 11, 30, 15) },
-                    new Order { Id = customer.Orders[2].Id, Amount = 55.2f, Date = new DateTime(2012, 3, 7, 13, 59, 1) },
-                    new Order { Id = customer.Orders[4].Id, Amount = 4.5f, Date = new DateTime(2012, 4, 5, 7, 3, 0) },
-                    new Order { Amount = 206.6f, Date = new DateTime(2012, 7, 20, 21, 20, 24) },
-                    new Order { Amount = 78f, Date = new DateTime(2012, 02, 1, 22, 31, 7) }
+                    new OrderInt
+                    {
+                        Id = customer.Orders[0].Id, Amount = 15.7f, Date = new DateTime(2012, 5, 15, 11, 30, 15)
+                    },
+                    new OrderInt
+                    {
+                        Id = customer.Orders[2].Id, Amount = 55.2f, Date = new DateTime(2012, 3, 7, 13, 59, 1)
+                    },
+                    new OrderInt { Id = customer.Orders[4].Id, Amount = 4.5f, Date = new DateTime(2012, 4, 5, 7, 3, 0) },
+                    new OrderInt { Amount = 206.6f, Date = new DateTime(2012, 7, 20, 21, 20, 24) },
+                    new OrderInt { Amount = 78f, Date = new DateTime(2012, 02, 1, 22, 31, 7) }
                 }
             };
 
             customer = newCustomer;
 
             // Insert any of the orders instead of the customer
-            customer.Orders[0].Customer = customer; // Required to complete the entity tree
-            await conn.InsertOrReplaceWithChildrenAsync(customer.Orders[0], recursive: true);
+            customer.Orders[0].CustomerInt = customer; // Required to complete the entity tree
+            await conn.InsertOrReplaceWithChildrenAsync(customer.Orders[0], true);
 
             expectedOrders = customer.Orders.OrderBy(o => o.Date).ToDictionary(o => o.Id);
 
-            obtainedCustomer = await conn.GetWithChildrenAsync<Customer>(customer.Id, recursive: true);
+            obtainedCustomer = await conn.GetWithChildrenAsync<CustomerInt>(customer.Id, true);
+            Assert.NotNull(obtainedCustomer);
+            Assert.NotNull(obtainedCustomer.Orders);
+            Assert.AreEqual(expectedOrders.Count, obtainedCustomer.Orders.Length);
+
+            foreach (var order in obtainedCustomer.Orders)
+            {
+                var expectedOrder = expectedOrders[order.Id];
+                Assert.AreEqual(expectedOrder.Amount, order.Amount, 0.0001);
+                Assert.AreEqual(expectedOrder.Date, order.Date);
+                Assert.NotNull(order.CustomerInt);
+                Assert.AreEqual(customer.Id, order.CustomerId);
+                Assert.AreEqual(customer.Id, order.CustomerInt.Id);
+                Assert.AreEqual(customer.Name, order.CustomerInt.Name);
+                Assert.NotNull(order.CustomerInt.Orders);
+                Assert.AreEqual(expectedOrders.Count, order.CustomerInt.Orders.Length);
+            }
+        }
+
+        /// <summary>
+        ///     This test will validate the same scenario than TestOneToManyRecursiveInsertGuid but inserting
+        ///     one of the orders instead of the customer
+        /// </summary>
+        [Test]
+        public async Task TestManyToOneRecursiveInsertGuidAsync()
+        {
+            var conn = Utils.CreateAsyncConnection();
+            await conn.DropTableAsync<CustomerGuid>();
+            await conn.DropTableAsync<OrderGuid>();
+            await conn.CreateTableAsync<CustomerGuid>();
+            await conn.CreateTableAsync<OrderGuid>();
+
+            var customer = new CustomerGuid
+            {
+                Id = Guid.NewGuid(),
+                Name = "John Smith",
+                Orders = new[]
+                {
+                    new OrderGuid { Id = Guid.NewGuid(), Amount = 25.7f, Date = new DateTime(2014, 5, 15, 11, 30, 15) },
+                    new OrderGuid { Id = Guid.NewGuid(), Amount = 15.2f, Date = new DateTime(2014, 3, 7, 13, 59, 1) },
+                    new OrderGuid { Id = Guid.NewGuid(), Amount = 0.5f, Date = new DateTime(2014, 4, 5, 7, 3, 0) },
+                    new OrderGuid
+                        { Id = Guid.NewGuid(), Amount = 106.6f, Date = new DateTime(2014, 7, 20, 21, 20, 24) },
+                    new OrderGuid { Id = Guid.NewGuid(), Amount = 98f, Date = new DateTime(2014, 02, 1, 22, 31, 7) }
+                }
+            };
+
+            // Insert any of the orders instead of the customer
+            customer.Orders[0].Customer = customer; // Required to complete the entity tree
+            await conn.InsertWithChildrenAsync(customer.Orders[0], true);
+
+            var expectedOrders = customer.Orders.OrderBy(o => o.Date).ToDictionary(o => o.Id);
+
+            var obtainedCustomer = await conn.GetWithChildrenAsync<CustomerGuid>(customer.Id, true);
             Assert.NotNull(obtainedCustomer);
             Assert.NotNull(obtainedCustomer.Orders);
             Assert.AreEqual(expectedOrders.Count, obtainedCustomer.Orders.Length);
@@ -697,15 +770,14 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
                 Assert.AreEqual(expectedOrders.Count, order.Customer.Orders.Length);
             }
         }
-#endregion
 
-#region ManyToOneRecursiveInsertGuidAsync
         /// <summary>
-        /// This test will validate the same scenario than TestOneToManyRecursiveInsertGuid but inserting
-        /// one of the orders instead of the customer
+        ///     This test will validate the same scenario than TestOneToManyRecursiveInsertOrReplaceGuid but inserting
+        ///     one of the orders instead of the customer
         /// </summary>
         [Test]
-        public async Task TestManyToOneRecursiveInsertGuidAsync() {
+        public async Task TestManyToOneRecursiveInsertOrReplaceGuidAsync()
+        {
             var conn = Utils.CreateAsyncConnection();
             await conn.DropTableAsync<CustomerGuid>();
             await conn.DropTableAsync<OrderGuid>();
@@ -716,74 +788,24 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
             {
                 Id = Guid.NewGuid(),
                 Name = "John Smith",
-                Orders = new []
+                Orders = new[]
                 {
                     new OrderGuid { Id = Guid.NewGuid(), Amount = 25.7f, Date = new DateTime(2014, 5, 15, 11, 30, 15) },
                     new OrderGuid { Id = Guid.NewGuid(), Amount = 15.2f, Date = new DateTime(2014, 3, 7, 13, 59, 1) },
                     new OrderGuid { Id = Guid.NewGuid(), Amount = 0.5f, Date = new DateTime(2014, 4, 5, 7, 3, 0) },
-                    new OrderGuid { Id = Guid.NewGuid(), Amount = 106.6f, Date = new DateTime(2014, 7, 20, 21, 20, 24) },
+                    new OrderGuid
+                        { Id = Guid.NewGuid(), Amount = 106.6f, Date = new DateTime(2014, 7, 20, 21, 20, 24) },
                     new OrderGuid { Id = Guid.NewGuid(), Amount = 98f, Date = new DateTime(2014, 02, 1, 22, 31, 7) }
                 }
             };
 
             // Insert any of the orders instead of the customer
             customer.Orders[0].Customer = customer; // Required to complete the entity tree
-            await conn.InsertWithChildrenAsync(customer.Orders[0], recursive: true);
+            await conn.InsertOrReplaceWithChildrenAsync(customer.Orders[0], true);
 
             var expectedOrders = customer.Orders.OrderBy(o => o.Date).ToDictionary(o => o.Id);
 
-            var obtainedCustomer = await conn.GetWithChildrenAsync<CustomerGuid>(customer.Id, recursive: true);
-            Assert.NotNull(obtainedCustomer);
-            Assert.NotNull(obtainedCustomer.Orders);
-            Assert.AreEqual(expectedOrders.Count, obtainedCustomer.Orders.Length);
-
-            foreach (var order in obtainedCustomer.Orders)
-            {
-                var expectedOrder = expectedOrders[order.Id];
-                Assert.AreEqual(expectedOrder.Amount, order.Amount, 0.0001);
-                Assert.AreEqual(expectedOrder.Date, order.Date);
-                Assert.NotNull(order.Customer);
-                Assert.AreEqual(customer.Id, order.CustomerId);
-                Assert.AreEqual(customer.Id, order.Customer.Id);
-                Assert.AreEqual(customer.Name, order.Customer.Name);
-                Assert.NotNull(order.Customer.Orders);
-                Assert.AreEqual(expectedOrders.Count, order.Customer.Orders.Length);
-            }
-        }
-
-        /// <summary>
-        /// This test will validate the same scenario than TestOneToManyRecursiveInsertOrReplaceGuid but inserting
-        /// one of the orders instead of the customer
-        /// </summary>
-        [Test]
-        public async Task TestManyToOneRecursiveInsertOrReplaceGuidAsync() {
-            var conn = Utils.CreateAsyncConnection();
-            await conn.DropTableAsync<CustomerGuid>();
-            await conn.DropTableAsync<OrderGuid>();
-            await conn.CreateTableAsync<CustomerGuid>();
-            await conn.CreateTableAsync<OrderGuid>();
-
-            var customer = new CustomerGuid
-            {
-                Id = Guid.NewGuid(),
-                Name = "John Smith",
-                Orders = new []
-                {
-                    new OrderGuid { Id = Guid.NewGuid(), Amount = 25.7f, Date = new DateTime(2014, 5, 15, 11, 30, 15) },
-                    new OrderGuid { Id = Guid.NewGuid(), Amount = 15.2f, Date = new DateTime(2014, 3, 7, 13, 59, 1) },
-                    new OrderGuid { Id = Guid.NewGuid(), Amount = 0.5f, Date = new DateTime(2014, 4, 5, 7, 3, 0) },
-                    new OrderGuid { Id = Guid.NewGuid(), Amount = 106.6f, Date = new DateTime(2014, 7, 20, 21, 20, 24) },
-                    new OrderGuid { Id = Guid.NewGuid(), Amount = 98f, Date = new DateTime(2014, 02, 1, 22, 31, 7) }
-                }
-            };
-
-            // Insert any of the orders instead of the customer
-            customer.Orders[0].Customer = customer; // Required to complete the entity tree
-            await conn.InsertOrReplaceWithChildrenAsync(customer.Orders[0], recursive: true);
-
-            var expectedOrders = customer.Orders.OrderBy(o => o.Date).ToDictionary(o => o.Id);
-
-            var obtainedCustomer = await conn.GetWithChildrenAsync<CustomerGuid>(customer.Id, recursive: true);
+            var obtainedCustomer = await conn.GetWithChildrenAsync<CustomerGuid>(customer.Id, true);
             Assert.NotNull(obtainedCustomer);
             Assert.NotNull(obtainedCustomer.Orders);
             Assert.AreEqual(expectedOrders.Count, obtainedCustomer.Orders.Length);
@@ -805,12 +827,16 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
             {
                 Id = customer.Id,
                 Name = "John Smith",
-                Orders = new []
+                Orders = new[]
                 {
-                    new OrderGuid { Id = customer.Orders[0].Id, Amount = 15.7f, Date = new DateTime(2012, 5, 15, 11, 30, 15) },
-                    new OrderGuid { Id = customer.Orders[2].Id, Amount = 55.2f, Date = new DateTime(2012, 3, 7, 13, 59, 1) },
-                    new OrderGuid { Id = customer.Orders[4].Id, Amount = 4.5f, Date = new DateTime(2012, 4, 5, 7, 3, 0) },
-                    new OrderGuid { Id = Guid.NewGuid(), Amount = 206.6f, Date = new DateTime(2012, 7, 20, 21, 20, 24) },
+                    new OrderGuid
+                        { Id = customer.Orders[0].Id, Amount = 15.7f, Date = new DateTime(2012, 5, 15, 11, 30, 15) },
+                    new OrderGuid
+                        { Id = customer.Orders[2].Id, Amount = 55.2f, Date = new DateTime(2012, 3, 7, 13, 59, 1) },
+                    new OrderGuid
+                        { Id = customer.Orders[4].Id, Amount = 4.5f, Date = new DateTime(2012, 4, 5, 7, 3, 0) },
+                    new OrderGuid
+                        { Id = Guid.NewGuid(), Amount = 206.6f, Date = new DateTime(2012, 7, 20, 21, 20, 24) },
                     new OrderGuid { Id = Guid.NewGuid(), Amount = 78f, Date = new DateTime(2012, 02, 1, 22, 31, 7) }
                 }
             };
@@ -819,11 +845,11 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
 
             // Insert any of the orders instead of the customer
             customer.Orders[0].Customer = customer; // Required to complete the entity tree
-            await conn.InsertOrReplaceWithChildrenAsync(customer.Orders[0], recursive: true);
+            await conn.InsertOrReplaceWithChildrenAsync(customer.Orders[0], true);
 
             expectedOrders = customer.Orders.OrderBy(o => o.Date).ToDictionary(o => o.Id);
 
-            obtainedCustomer = await conn.GetWithChildrenAsync<CustomerGuid>(customer.Id, recursive: true);
+            obtainedCustomer = await conn.GetWithChildrenAsync<CustomerGuid>(customer.Id, true);
             Assert.NotNull(obtainedCustomer);
             Assert.NotNull(obtainedCustomer.Orders);
             Assert.AreEqual(expectedOrders.Count, obtainedCustomer.Orders.Length);
@@ -841,12 +867,10 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
                 Assert.AreEqual(expectedOrders.Count, order.Customer.Orders.Length);
             }
         }
-#endregion
 
-#region ManyToManyCascadeWithSameClassRelationshipAsync
-        public class TwitterUser {
-            [PrimaryKey, AutoIncrement]
-            public int Id { get; set; }
+        public class TwitterUser
+        {
+            [PrimaryKey] [AutoIncrement] public int Id { get; set; }
 
             public string Name { get; set; }
 
@@ -859,28 +883,32 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
                 CascadeOperations = CascadeOperation.CascadeRead, ReadOnly = true)]
             public List<TwitterUser> Followers { get; set; }
 
-            public override bool Equals(object obj) {
-                var other = obj as TwitterUser;
-                return other != null && Name.Equals(other.Name);
+            public override bool Equals(object obj)
+            {
+                return obj is TwitterUser other && Name.Equals(other.Name);
             }
+
             public override int GetHashCode()
             {
                 return Name.GetHashCode();
             }
+
             public override string ToString()
             {
-                return string.Format("[TwitterUser: Id={0}, Name={1}]", Id, Name);
+                return $"[TwitterUser: Id={Id}, Name={Name}]";
             }
         }
 
         // Intermediate class, not used directly anywhere in the code, only in ManyToMany attributes and table creation
-        public class FollowerLeaderRelationshipTable {
+        private class FollowerLeaderRelationshipTable
+        {
             public int LeaderId { get; set; }
             public int FollowerId { get; set; }
         }
 
         [Test]
-        public async Task TestManyToManyRecursiveInsertWithSameClassRelationshipAsync() {
+        public async Task TestManyToManyRecursiveInsertWithSameClassRelationshipAsync()
+        {
             // We will configure the following scenario
             // 'John' follows 'Peter' and 'Thomas'
             // 'Thomas' follows 'John'
@@ -923,55 +951,55 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
             var anthony = new TwitterUser { Name = "anthony" };
             var peter = new TwitterUser { Name = "Peter" };
 
-            john.FollowingUsers = new List<TwitterUser>{ peter, thomas };
-            thomas.FollowingUsers = new List<TwitterUser>{ john };
-            will.FollowingUsers = new List<TwitterUser>{ claire };
-            claire.FollowingUsers = new List<TwitterUser>{ will };
-            jaime.FollowingUsers = new List<TwitterUser>{ peter, thomas, mark };
+            john.FollowingUsers = new List<TwitterUser> { peter, thomas };
+            thomas.FollowingUsers = new List<TwitterUser> { john };
+            will.FollowingUsers = new List<TwitterUser> { claire };
+            claire.FollowingUsers = new List<TwitterUser> { will };
+            jaime.FollowingUsers = new List<TwitterUser> { peter, thomas, mark };
             mark.FollowingUsers = new List<TwitterUser>();
-            martha.FollowingUsers = new List<TwitterUser>{ anthony };
-            anthony.FollowingUsers = new List<TwitterUser>{ peter };
-            peter.FollowingUsers = new List<TwitterUser>{ martha };
+            martha.FollowingUsers = new List<TwitterUser> { anthony };
+            anthony.FollowingUsers = new List<TwitterUser> { peter };
+            peter.FollowingUsers = new List<TwitterUser> { martha };
 
-            var allUsers = new []{ john, thomas, will, claire, jaime, mark, martha, anthony, peter };
+            var allUsers = new[] { john, thomas, will, claire, jaime, mark, martha, anthony, peter };
 
             // Only need to insert Jaime and Claire, the other users are contained in these trees
-            await conn.InsertAllWithChildrenAsync(new []{ jaime, claire }, recursive: true);
+            await conn.InsertAllWithChildrenAsync(new[] { jaime, claire }, true);
 
-            Action<TwitterUser, TwitterUser> checkUser = (expected, obtained) =>
+            void CheckUser(TwitterUser expected, TwitterUser obtained)
             {
                 Assert.NotNull(obtained, "User is null: {0}", expected.Name);
                 Assert.AreEqual(expected.Name, obtained.Name);
                 Assert.That(obtained.FollowingUsers, Is.EquivalentTo(expected.FollowingUsers));
                 var followers = allUsers.Where(u => u.FollowingUsers.Contains(expected));
                 Assert.That(obtained.Followers, Is.EquivalentTo(followers));
-            };
+            }
 
-            var obtainedThomas = await conn.GetWithChildrenAsync<TwitterUser>(thomas.Id, recursive: true);
-            checkUser(thomas, obtainedThomas);
+            var obtainedThomas = await conn.GetWithChildrenAsync<TwitterUser>(thomas.Id, true);
+            CheckUser(thomas, obtainedThomas);
 
             var obtainedJohn = obtainedThomas.FollowingUsers.FirstOrDefault(u => u.Id == john.Id);
-            checkUser(john, obtainedJohn);
+            CheckUser(john, obtainedJohn);
 
             var obtainedPeter = obtainedJohn.FollowingUsers.FirstOrDefault(u => u.Id == peter.Id);
-            checkUser(peter, obtainedPeter);
+            CheckUser(peter, obtainedPeter);
 
             var obtainedMartha = obtainedPeter.FollowingUsers.FirstOrDefault(u => u.Id == martha.Id);
-            checkUser(martha, obtainedMartha);
+            CheckUser(martha, obtainedMartha);
 
             var obtainedAnthony = obtainedMartha.FollowingUsers.FirstOrDefault(u => u.Id == anthony.Id);
-            checkUser(anthony, obtainedAnthony);
+            CheckUser(anthony, obtainedAnthony);
 
             var obtainedJaime = obtainedThomas.Followers.FirstOrDefault(u => u.Id == jaime.Id);
-            checkUser(jaime, obtainedJaime);
+            CheckUser(jaime, obtainedJaime);
 
             var obtainedMark = obtainedJaime.FollowingUsers.FirstOrDefault(u => u.Id == mark.Id);
-            checkUser(mark, obtainedMark);
-
+            CheckUser(mark, obtainedMark);
         }
 
         [Test]
-        public async Task TestManyToManyRecursiveDeleteWithSameClassRelationshipAsync() {
+        public async Task TestManyToManyRecursiveDeleteWithSameClassRelationshipAsync()
+        {
             // We will configure the following scenario
             // 'John' follows 'Peter' and 'Thomas'
             // 'Thomas' follows 'John'
@@ -1014,92 +1042,99 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
             var anthony = new TwitterUser { Name = "anthony" };
             var peter = new TwitterUser { Name = "Peter" };
 
-            john.FollowingUsers = new List<TwitterUser>{ peter, thomas };
-            thomas.FollowingUsers = new List<TwitterUser>{ john };
-            will.FollowingUsers = new List<TwitterUser>{ claire };
-            claire.FollowingUsers = new List<TwitterUser>{ will };
-            jaime.FollowingUsers = new List<TwitterUser>{ peter, thomas, mark };
+            john.FollowingUsers = new List<TwitterUser> { peter, thomas };
+            thomas.FollowingUsers = new List<TwitterUser> { john };
+            will.FollowingUsers = new List<TwitterUser> { claire };
+            claire.FollowingUsers = new List<TwitterUser> { will };
+            jaime.FollowingUsers = new List<TwitterUser> { peter, thomas, mark };
             mark.FollowingUsers = new List<TwitterUser>();
-            martha.FollowingUsers = new List<TwitterUser>{ anthony };
-            anthony.FollowingUsers = new List<TwitterUser>{ peter };
-            peter.FollowingUsers = new List<TwitterUser>{ martha };
+            martha.FollowingUsers = new List<TwitterUser> { anthony };
+            anthony.FollowingUsers = new List<TwitterUser> { peter };
+            peter.FollowingUsers = new List<TwitterUser> { martha };
 
-            var allUsers = new []{ john, thomas, will, claire, jaime, mark, martha, anthony, peter };
+            var allUsers = new[] { john, thomas, will, claire, jaime, mark, martha, anthony, peter };
 
             // Inserts all the objects in the database recursively
-            await conn.InsertAllWithChildrenAsync(allUsers, recursive: true);
+            await conn.InsertAllWithChildrenAsync(allUsers, true);
 
             // Deletes the entity tree starting at 'Thomas' recursively
-            await conn.DeleteAsync(thomas, recursive: true);
+            await conn.DeleteAsync(thomas, true);
 
-            var expectedUsers = new []{ jaime, mark, claire, will };
+            var expectedUsers = new[] { jaime, mark, claire, will };
             var existingUsers = await conn.Table<TwitterUser>().ToListAsync();
 
             // Check that the users have been deleted and only the users outside the 'Thomas' tree still exist
             Assert.That(existingUsers, Is.EquivalentTo(expectedUsers));
         }
-#endregion
 
-#region InsertTextBlobPropertiesRecursiveAsync
-        class Teacher {
-            [PrimaryKey, AutoIncrement]
-            public int Id { get; set; }
+        private class Teacher
+        {
+            [PrimaryKey] [AutoIncrement] public int Id { get; set; }
+
             public string Name { get; set; }
 
             [OneToMany(CascadeOperations = CascadeOperation.CascadeInsert)]
             public List<Student> Students { get; set; }
         }
 
-        class Student {
-            [PrimaryKey, AutoIncrement]
-            public int Id { get; set; }
+        private class Student
+        {
+            [PrimaryKey] [AutoIncrement] public int Id { get; set; }
+
             public string Name { get; set; }
 
-            [ManyToOne]
-            public Teacher Teacher { get; set; }
+            [ManyToOne] public Teacher Teacher { get; set; }
 
-            [TextBlob("AddressBlob")]
-            public Address Address { get; set; }
+            [TextBlob("AddressBlob")] public Address Address { get; set; }
 
-            [ForeignKey(typeof(Teacher))]
-            public int TeacherId { get; set; }
-            public String AddressBlob { get; set; }
+            [ForeignKey(typeof(Teacher))] public int TeacherId { get; set; }
 
+            public string AddressBlob { get; set; }
         }
 
-        class Address {
+        private class Address
+        {
             public string Street { get; set; }
             public string Town { get; set; }
         }
 
         [Test]
-        public async Task TestInsertTextBlobPropertiesRecursiveAsync() {
+        public async Task TestInsertTextBlobPropertiesRecursiveAsync()
+        {
             var conn = Utils.CreateAsyncConnection();
             await conn.DropTableAsync<Student>();
             await conn.DropTableAsync<Teacher>();
             await conn.CreateTableAsync<Student>();
             await conn.CreateTableAsync<Teacher>();
 
-            var teacher = new Teacher {
+            var teacher = new Teacher
+            {
                 Name = "John Smith",
-                Students = new List<Student> {
-                    new Student {
+                Students = new List<Student>
+                {
+                    new()
+                    {
                         Name = "Bruce Banner",
-                        Address = new Address {
+                        Address = new Address
+                        {
                             Street = "Sesame Street 5",
                             Town = "Gotham City"
                         }
                     },
-                    new Student {
+                    new()
+                    {
                         Name = "Peter Parker",
-                        Address = new Address {
+                        Address = new Address
+                        {
                             Street = "Arlington Road 69",
                             Town = "Arkham City"
                         }
                     },
-                    new Student {
+                    new()
+                    {
                         Name = "Steve Rogers",
-                        Address = new Address {
+                        Address = new Address
+                        {
                             Street = "28th Street 19",
                             Town = "New York"
                         }
@@ -1107,9 +1142,10 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
                 }
             };
 
-            await conn.InsertWithChildrenAsync(teacher, recursive: true);
+            await conn.InsertWithChildrenAsync(teacher, true);
 
-            foreach (var student in teacher.Students) {
+            foreach (var student in teacher.Students)
+            {
                 var dbStudent = await conn.GetWithChildrenAsync<Student>(student.Id);
                 Assert.NotNull(dbStudent);
                 Assert.NotNull(dbStudent.Address);
@@ -1117,7 +1153,5 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
                 Assert.AreEqual(student.Address.Town, dbStudent.Address.Town);
             }
         }
-#endregion
     }
 }
-

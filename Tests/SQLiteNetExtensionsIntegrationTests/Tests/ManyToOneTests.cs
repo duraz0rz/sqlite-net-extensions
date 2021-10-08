@@ -1,10 +1,11 @@
 using System;
 using NUnit.Framework;
+using SQLite;
 using SQLiteNetExtensions.Attributes;
 using SQLiteNetExtensions.Extensions;
-using SQLite;
+using SQLiteNetExtensions.IntegrationTests;
 
-namespace SQLiteNetExtensions.IntegrationTests.Tests
+namespace SQLiteNetExtensionsIntegrationTests.Tests
 {
 
     [TestFixture]
