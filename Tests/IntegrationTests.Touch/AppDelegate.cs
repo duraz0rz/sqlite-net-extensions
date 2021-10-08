@@ -13,6 +13,7 @@ namespace SQLiteNetExtensions.IntegrationTests.Touch
 
         public override bool FinishedLaunching(UIApplication app, NSDictionary options)
         {
+            SQLitePCL.Batteries_V2.Init();
             _window = new UIWindow(UIScreen.MainScreen.Bounds);
             _runner = new TouchRunner(_window);
 
