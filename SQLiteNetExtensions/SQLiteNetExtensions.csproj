@@ -2,6 +2,12 @@
     <PropertyGroup>
         <TargetFramework>netstandard2.0</TargetFramework>
         <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+        <PackageId>SQLiteNetExtensions</PackageId>
+        <Version>2.2.0</Version>
+        <Authors>Marc Vertido</Authors>
+        <Description>SQLite-Net Extensions is a very simple ORM that provides cascade operations, one-to-one, one-to-many, many-to-one, many-to-many, inverse and text-blobbed relationships on top of the sqlite-net library.</Description>
+        <PackageProjectUrl>https://github.com/duraz0rz/sqlite-net-extensions</PackageProjectUrl>
+        <PackageTags>sqlite;sqlite-net;net;extensions;orm;cascade;recursive</PackageTags>
     </PropertyGroup>
     <ItemGroup>
       <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
