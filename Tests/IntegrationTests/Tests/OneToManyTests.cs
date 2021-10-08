@@ -723,7 +723,7 @@ namespace SQLiteNetExtensions.IntegrationTests.Tests
         /// Issue #17: https://bitbucket.org/twincoders/sqlite-net-extensions/issue/17
         /// </summary>
         [Test]
-        [NUnit.Framework.Ignore]
+        [NUnit.Framework.Ignore("There's a problem here")]
         public void TestRecursiveInverseRelationship()
         {
             var conn = Utils.CreateConnection();
