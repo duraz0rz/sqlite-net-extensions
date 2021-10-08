@@ -8,6 +8,7 @@
     <Description>SQLite-Net Extensions is a very simple ORM that provides cascade operations, one-to-one, one-to-many, many-to-one, many-to-many, inverse and text-blobbed relationships on top of the sqlite-net library.</Description>
     <PackageProjectUrl>https://github.com/duraz0rz/sqlite-net-extensions</PackageProjectUrl>
     <PackageTags>sqlite;sqlite-net;net;extensions;orm;cascade;recursive;async</PackageTags>
+    <LangVersion>default</LangVersion>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\SQLiteNetExtensions\SQLiteNetExtensions.csproj" />
